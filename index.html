@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Controle Financeiro</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/PapaParse/5.4.1/papaparse.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: #fff;
+      color: #1a1a1a;
+      min-height: 100vh;
+      padding: 24px 20px 48px;
+    }
+
+    .container { max-width: 960px; margin: 0 auto; }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    header h1 { font-size: 1.25rem; font-weight: 500; }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    #last-updated { font-size: 0.75rem; color: #888; }
+
+    #refresh-btn {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 7px 14px;
+      background: #1a1a1a;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: opacity 0.15s;
+    }
+
+    #refresh-btn:hover { opacity: 0.8; }
+    #refresh-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+    .spinner {
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.4);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.7s linear infinite;
+      display: none;
+    }
+
+    .spinning .spinner { display: block; }
+    .spinning .refresh-icon { display: none; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .filter-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .filter-row label { font-size: 0.8rem; color: #555; }
+
+    #month-select {
+      padding: 6px 10px;
+      border: 1px solid #e0e0e0;
+      border-radius: 6px;
+      font-family: inherit;
+      font-size: 0.8rem;
+      background: #fff;
+      cursor: pointer;
+    }
+
+    #status-msg {
+      text-align: center;
+      padding: 40px 0;
+      font-size: 0.9rem;
+      color: #555;
+    }
+
+    #status-msg.error { color: #c0392b; }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .card {
+      background: #F5F5F5;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .card-label {
+      font-size: 0.7rem;
+      color: #777;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      margin-bottom: 8px;
+    }
+
+    .card-value { font-size: 1.3rem; font-weight: 500; line-height: 1.1; }
+    .card-value.small { font-size: 1rem; }
+
+    .section-title {
+      font-size: 0.8rem;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #999;
+      margin-bottom: 12px;
+    }
+
+    .cat-bars { margin-bottom: 28px; }
+
+    .cat-row {
+      display: grid;
+      grid-template-columns: 110px 1fr 68px;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .cat-name {
+      font-size: 0.78rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: #333;
+    }
+
+    .cat-track {
+      background: #F0F0F0;
+      border-radius: 4px;
+      height: 8px;
+      overflow: hidden;
+    }
+
+    .cat-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.4s ease;
+    }
+
+    .cat-amt { font-size: 0.75rem; color: #555; text-align: right; }
+
+    /* section-title is outside chart-wrap so canvas uses full height */
+    .chart-wrap {
+      margin-bottom: 28px;
+      height: 160px;
+      position: relative;
+    }
+
+    .table-wrap { overflow-x: auto; }
+
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+
+    thead th {
+      text-align: left;
+      font-weight: 500;
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #999;
+      padding: 8px 10px;
+      border-bottom: 0.5px solid #e0e0e0;
+    }
+
+    tbody tr { border-bottom: 0.5px solid #f0f0f0; }
+    tbody tr:last-child { border-bottom: none; }
+
+    tbody td { padding: 9px 10px; vertical-align: middle; color: #222; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 20px;
+      font-size: 0.68rem;
+      font-weight: 500;
+    }
+
+    .badge-fixo     { background: #DBEAFE; color: #1D4ED8; }
+    .badge-variavel { background: #FEF9C3; color: #92400E; }
+    .badge-extra    { background: #FCE7F3; color: #9D174D; }
+    .badge-other    { background: #F3F4F6; color: #374151; }
+
+    td.valor { text-align: right; font-variant-numeric: tabular-nums; }
+
+    #main-content { display: none; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header>
+    <h1>Controle Financeiro</h1>
+    <div class="header-right">
+      <span id="last-updated"></span>
+      <button id="refresh-btn">
+        <svg class="refresh-icon" xmlns="http://www.w3.org/2000/svg" width="14" height="14"
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+          stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/>
+          <path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/>
+        </svg>
+        <div class="spinner"></div>
+        Atualizar
+      </button>
+    </div>
+  </header>
+
+  <div id="status-msg">Carregando dados&hellip;</div>
+
+  <div id="main-content">
+    <div class="filter-row">
+      <label for="month-select">M&ecirc;s:</label>
+      <select id="month-select"><option value="all">Todos</option></select>
+    </div>
+
+    <div class="cards">
+      <div class="card">
+        <div class="card-label">Total de Gastos</div>
+        <div class="card-value" id="c-total">&mdash;</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Gastos Fixos</div>
+        <div class="card-value" id="c-fixo">&mdash;</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Gastos Vari&aacute;veis</div>
+        <div class="card-value" id="c-variavel">&mdash;</div>
+      </div>
+      <div class="card">
+        <div class="card-label">Maior Categoria</div>
+        <div class="card-value small" id="c-top-cat">&mdash;</div>
+      </div>
+    </div>
+
+    <div class="cat-bars">
+      <div class="section-title">Por Categoria</div>
+      <div id="cat-bars-content"></div>
+    </div>
+
+    <div class="section-title">Evolu&ccedil;&atilde;o Mensal</div>
+    <div class="chart-wrap">
+      <canvas id="line-chart"></canvas>
+    </div>
+
+    <div class="section-title">Lan&ccedil;amentos</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Descri&ccedil;&atilde;o</th>
+            <th>Categoria</th>
+            <th>Tipo</th>
+            <th style="text-align:right">Valor</th>
+          </tr>
+        </thead>
+        <tbody id="table-body"></tbody>
+      </table>
+      <div id="no-data-msg"
+        style="display:none;text-align:center;padding:32px 0;font-size:0.85rem;color:#888">
+        Nenhum dado encontrado.
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  var CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHxO0A4QTL9fxCK5OglA3Jcat2gfH4nUP1zoYbMqCdBS-F3fHpZTQ4mL2VYww9CMMBzbXz24zGhmEc/pub?gid=1589078644&single=true&output=csv';
+
+  var CAT_COLORS = {
+    alimenta:  '#1D9E75',
+    moradia:   '#378ADD',
+    transport: '#EF9F27',
+    saude:     '#D4537E',
+    lazer:     '#7F77DD',
+    educa:     '#D85A30',
+    conta:     '#185FA5'
+  };
+  var FALLBACK_COLOR = '#888780';
+
+  // Safe accent-strip using explicit Unicode code-point range
+  function stripAccents(s) {
+    return s.normalize('NFD').replace(/[̀-ͯ]/g, '');
+  }
+
+  function catColor(name) {
+    if (!name) return FALLBACK_COLOR;
+    var n = stripAccents(name.toLowerCase());
+    var keys = Object.keys(CAT_COLORS);
+    for (var i = 0; i < keys.length; i++) {
+      if (n.indexOf(keys[i]) !== -1) return CAT_COLORS[keys[i]];
+    }
+    return FALLBACK_COLOR;
+  }
+
+  function findCol(headers, patterns) {
+    for (var pi = 0; pi < patterns.length; pi++) {
+      for (var hi = 0; hi < headers.length; hi++) {
+        if (headers[hi].toLowerCase().indexOf(patterns[pi]) !== -1) return headers[hi];
+      }
+    }
+    return null;
+  }
+
+  function parseBRL(str) {
+    if (!str) return 0;
+    // Remove R$, spaces, thousand-dots, then swap decimal comma to dot
+    var clean = String(str)
+      .replace(/R\$\s*/gi, '')
+      .replace(/\s/g, '')
+      .replace(/\./g, '')
+      .replace(/,/g, '.');  // global replace — fixes multiple-comma edge cases
+    var v = parseFloat(clean);
+    return isNaN(v) ? 0 : v;
+  }
+
+  function fmtBRL(v) {
+    return v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+  }
+
+  function parseDate(str) {
+    if (!str) return null;
+    var s = String(str).trim();
+    var m = s.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
+    if (m) {
+      var y = parseInt(m[3], 10);
+      if (y < 100) y += 2000;
+      return new Date(y, parseInt(m[2], 10) - 1, parseInt(m[1], 10));
+    }
+    var d = new Date(s);
+    return isNaN(d.getTime()) ? null : d;
+  }
+
+  function monthKey(date) {
+    if (!date) return null;
+    return date.getFullYear() + '-' + String(date.getMonth() + 1).padStart(2, '0');
+  }
+
+  function monthLabel(key) {
+    var parts = key.split('-');
+    var d = new Date(parseInt(parts[0], 10), parseInt(parts[1], 10) - 1, 1);
+    return d.toLocaleDateString('pt-BR', { month: 'short', year: 'numeric' });
+  }
+
+  function badgeClass(tipo) {
+    if (!tipo) return 'badge-other';
+    var t = stripAccents(tipo.toLowerCase());
+    if (t.indexOf('fix') !== -1)  return 'badge-fixo';
+    if (t.indexOf('vari') !== -1) return 'badge-variavel';
+    if (t.indexOf('extra') !== -1) return 'badge-extra';
+    return 'badge-other';
+  }
+
+  // ---- State ----
+  var allRows  = [];
+  var lineChart = null;
+
+  // ---- DOM refs ----
+  var statusMsg   = document.getElementById('status-msg');
+  var mainContent = document.getElementById('main-content');
+  var refreshBtn  = document.getElementById('refresh-btn');
+  var lastUpdated = document.getElementById('last-updated');
+  var monthSelect = document.getElementById('month-select');
+  var tableBody   = document.getElementById('table-body');
+  var noDataMsg   = document.getElementById('no-data-msg');
+  var catBarsEl   = document.getElementById('cat-bars-content');
+
+  function setLoading(yes) {
+    refreshBtn.disabled = yes;
+    refreshBtn.classList.toggle('spinning', yes);
+  }
+
+  function showError(msg) {
+    statusMsg.textContent = msg;
+    statusMsg.className = 'error';
+    statusMsg.style.display = '';
+    mainContent.style.display = 'none';
+    setLoading(false);
+  }
+
+  function loadData() {
+    setLoading(true);
+    statusMsg.textContent = 'Carregando dados…';
+    statusMsg.className = '';
+    statusMsg.style.display = '';
+    mainContent.style.display = 'none';
+
+    var url = CSV_URL + '&cachebust=' + Date.now();
+
+    fetch(url)
+      .then(function (res) {
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        return res.text();
+      })
+      .then(function (text) {
+        // Detect HTML redirect/login page returned instead of CSV
+        if (text.trim().startsWith('<')) {
+          throw new Error('Planilha não está publicada como CSV ou requer login.');
+        }
+        var result = Papa.parse(text, { header: true, skipEmptyLines: true });
+        if (!result.data || result.data.length === 0) {
+          showError('Nenhum dado encontrado na planilha.');
+          return;
+        }
+
+        var headers = Object.keys(result.data[0]);
+        var colData  = findCol(headers, ['data', 'date', 'dia']);
+        var colDesc  = findCol(headers, ['descri', 'desc', 'nome', 'item', 'gasto']);
+        var colCat   = findCol(headers, ['categ', 'cat', 'grupo']);
+        var colTipo  = findCol(headers, ['tipo', 'type', 'natureza', 'classif']);
+        var colValor = findCol(headers, ['valor', 'value', 'quantia', 'total', 'r$']);
+
+        allRows = result.data.map(function (row) {
+          return {
+            rawDate: colData  ? row[colData]  : '',
+            date:    colData  ? parseDate(row[colData]) : null,
+            desc:    colDesc  ? (row[colDesc]  || '') : '',
+            cat:     colCat   ? (row[colCat]   || '') : '',
+            tipo:    colTipo  ? (row[colTipo]  || '') : '',
+            valor:   colValor ? parseBRL(row[colValor]) : 0
+          };
+        }).filter(function (r) { return r.valor !== 0 || r.desc; });
+
+        populateMonthSelect();
+
+        var now = new Date();
+        lastUpdated.textContent = 'Atualizado às '
+          + String(now.getHours()).padStart(2, '0') + ':'
+          + String(now.getMinutes()).padStart(2, '0');
+
+        statusMsg.style.display = 'none';
+        mainContent.style.display = '';
+
+        renderFiltered();
+        renderLineChart(allRows);
+        setLoading(false);
+      })
+      .catch(function (err) {
+        console.error('Dashboard load error:', err);
+        var detail = err && err.message ? ' (' + err.message + ')' : '';
+        if (window.location.protocol === 'file:') {
+          showError('Abra o arquivo via servidor local — use o abrir_dashboard.bat' + detail);
+        } else {
+          showError('Erro ao carregar. Verifique se a planilha está publicada.' + detail);
+        }
+      });
+  }
+
+  function populateMonthSelect() {
+    var saved = monthSelect.value;
+    var seen = {};
+    var months = [];
+    allRows.forEach(function (r) {
+      var k = monthKey(r.date);
+      if (k && !seen[k]) { seen[k] = true; months.push(k); }
+    });
+    months.sort();
+
+    monthSelect.innerHTML = '<option value="all">Todos</option>';
+    months.forEach(function (k) {
+      var opt = document.createElement('option');
+      opt.value = k;
+      opt.textContent = monthLabel(k);
+      monthSelect.appendChild(opt);
+    });
+
+    // Restore previously selected month if still present
+    var opts = Array.prototype.slice.call(monthSelect.options);
+    if (saved && opts.some(function (o) { return o.value === saved; })) {
+      monthSelect.value = saved;
+    }
+  }
+
+  function getFiltered() {
+    var sel = monthSelect.value;
+    if (sel === 'all') return allRows;
+    return allRows.filter(function (r) { return monthKey(r.date) === sel; });
+  }
+
+  function renderFiltered() {
+    var rows = getFiltered();
+
+    if (rows.length === 0) {
+      noDataMsg.style.display = '';
+      tableBody.innerHTML = '';
+      document.getElementById('c-total').textContent    = fmtBRL(0);
+      document.getElementById('c-fixo').textContent     = fmtBRL(0);
+      document.getElementById('c-variavel').textContent = fmtBRL(0);
+      document.getElementById('c-top-cat').textContent  = '—';
+      catBarsEl.innerHTML = '';
+      return;
+    }
+    noDataMsg.style.display = 'none';
+
+    // Cards
+    var total = rows.reduce(function (s, r) { return s + r.valor; }, 0);
+    var fixo  = rows.filter(function (r) {
+      return stripAccents(r.tipo.toLowerCase()).indexOf('fix') !== -1;
+    }).reduce(function (s, r) { return s + r.valor; }, 0);
+    var vari  = rows.filter(function (r) {
+      return stripAccents(r.tipo.toLowerCase()).indexOf('vari') !== -1;
+    }).reduce(function (s, r) { return s + r.valor; }, 0);
+
+    document.getElementById('c-total').textContent    = fmtBRL(total);
+    document.getElementById('c-fixo').textContent     = fmtBRL(fixo);
+    document.getElementById('c-variavel').textContent = fmtBRL(vari);
+
+    // Category totals
+    var catMap = {};
+    rows.forEach(function (r) {
+      var k = r.cat || 'Outros';
+      catMap[k] = (catMap[k] || 0) + r.valor;
+    });
+    var catSorted = Object.keys(catMap)
+      .map(function (k) { return [k, catMap[k]]; })
+      .sort(function (a, b) { return b[1] - a[1]; });
+
+    document.getElementById('c-top-cat').textContent =
+      catSorted.length ? catSorted[0][0] : '—';
+
+    // Category bars (top 6)
+    var top6   = catSorted.slice(0, 6);
+    var maxVal = top6.length ? top6[0][1] : 1;
+    catBarsEl.innerHTML = '';
+    top6.forEach(function (pair) {
+      var name = pair[0], val = pair[1];
+      var pct   = Math.round((val / maxVal) * 100);
+      var color = catColor(name);
+      var row   = document.createElement('div');
+      row.className = 'cat-row';
+      row.innerHTML =
+        '<span class="cat-name" title="' + name + '">' + name + '</span>' +
+        '<div class="cat-track"><div class="cat-fill" style="width:' + pct +
+        '%;background:' + color + '"></div></div>' +
+        '<span class="cat-amt">' + fmtBRL(val) + '</span>';
+      catBarsEl.appendChild(row);
+    });
+
+    // Table sorted newest first
+    var sorted = rows.slice().sort(function (a, b) {
+      var da = a.date ? a.date.getTime() : 0;
+      var db = b.date ? b.date.getTime() : 0;
+      return db - da;
+    });
+
+    tableBody.innerHTML = '';
+    sorted.forEach(function (r) {
+      var tr      = document.createElement('tr');
+      var dateStr = r.date ? r.date.toLocaleDateString('pt-BR') : (r.rawDate || '—');
+      var bc      = badgeClass(r.tipo);
+      tr.innerHTML =
+        '<td>' + (dateStr) + '</td>' +
+        '<td>' + (r.desc || '—') + '</td>' +
+        '<td>' + (r.cat  || '—') + '</td>' +
+        '<td><span class="badge ' + bc + '">' + (r.tipo || '—') + '</span></td>' +
+        '<td class="valor">' + fmtBRL(r.valor) + '</td>';
+      tableBody.appendChild(tr);
+    });
+  }
+
+  function renderLineChart(rows) {
+    var monthMap = {};
+    rows.forEach(function (r) {
+      var k = monthKey(r.date);
+      if (!k) return;
+      monthMap[k] = (monthMap[k] || 0) + r.valor;
+    });
+    var keys   = Object.keys(monthMap).sort();
+    var labels = keys.map(monthLabel);
+    var data   = keys.map(function (k) { return monthMap[k]; });
+
+    var canvas = document.getElementById('line-chart');
+    var ctx    = canvas.getContext('2d');
+    if (lineChart) { lineChart.destroy(); lineChart = null; }
+
+    lineChart = new Chart(ctx, {
+      type: 'line',
+      data: {
+        labels: labels,
+        datasets: [{
+          data: data,
+          borderColor: '#378ADD',
+          borderWidth: 2,
+          pointRadius: 3,
+          pointBackgroundColor: '#378ADD',
+          fill: true,
+          backgroundColor: 'rgba(55,138,221,0.08)',
+          tension: 0.35
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label: function (ctx) { return fmtBRL(ctx.parsed.y); }
+            }
+          }
+        },
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { font: { family: 'Inter', size: 10 }, color: '#999' }
+          },
+          y: {
+            grid: { color: '#F0F0F0' },
+            ticks: {
+              font: { family: 'Inter', size: 10 },
+              color: '#999',
+              callback: function (v) { return 'R$ ' + v.toLocaleString('pt-BR'); }
+            }
+          }
+        }
+      }
+    });
+  }
+
+  refreshBtn.addEventListener('click', loadData);
+  monthSelect.addEventListener('change', renderFiltered);
+  loadData();
+
+}());
+</script>
+</body>
+</html>
