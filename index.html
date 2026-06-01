@@ -122,6 +122,69 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .mtx .tot-row td{font-weight:600;background:#f5f5f5}
 .mtx .fcast{color:#aaa;font-style:italic}
 .no-data{text-align:center;padding:24px;color:#ccc;font-size:.82rem}
+/* ── MAIN TAB ── */
+.main-panel{padding:0;background:transparent;border:none}
+.m-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
+.mhc{background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px 18px;display:flex;flex-direction:column;gap:4px;transition:box-shadow .2s}
+.mhc:hover{box-shadow:0 4px 16px rgba(0,0,0,.06)}
+.mhc.accent-green{border-left:3px solid #15803D;background:linear-gradient(135deg,#F0FDF4 0%,#fff 60%)}
+.mhc.accent-red{border-left:3px solid #B91C1C;background:linear-gradient(135deg,#FEF2F2 0%,#fff 60%)}
+.mhc.accent-blue{border-left:3px solid #1D4ED8;background:linear-gradient(135deg,#EFF6FF 0%,#fff 60%)}
+.mhc.accent-yellow{border-left:3px solid #D97706;background:linear-gradient(135deg,#FFFBEB 0%,#fff 60%)}
+.mhc-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:#bbb}
+.mhc-val{font-size:1.35rem;font-weight:700;color:#111;line-height:1.1;font-variant-numeric:tabular-nums}
+.mhc-sub{font-size:.68rem;color:#aaa;display:flex;align-items:center;gap:5px}
+.mhc-badge{display:inline-flex;align-items:center;font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:20px}
+.mb-g{background:#DCFCE7;color:#15803D}.mb-r{background:#FEE2E2;color:#B91C1C}.mb-n{background:#F3F4F6;color:#6B7280}
+/* main grid */
+.m-grid{display:grid;gap:12px;margin-bottom:12px}
+.m-grid.col2{grid-template-columns:1fr 1fr}
+.m-grid.col3{grid-template-columns:1.6fr 1fr 1fr}
+.m-grid.col21{grid-template-columns:2fr 1fr}
+@media(max-width:760px){.m-grid.col2,.m-grid.col3,.m-grid.col21{grid-template-columns:1fr}}
+.mbox{background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;overflow:hidden}
+.mbox-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#bbb;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.mbox-title span.badge{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:20px;background:#F3F4F6;color:#666;text-transform:none;letter-spacing:0}
+/* bucket mini */
+.m-bucks{display:flex;flex-direction:column;gap:10px}
+.m-buck-row{display:flex;align-items:center;gap:10px}
+.m-buck-dot{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.m-buck-name{font-size:.78rem;font-weight:600;flex:1;color:#333}
+.m-buck-bar-wrap{flex:2;background:#f0f0f0;border-radius:4px;height:8px;overflow:hidden}
+.m-buck-bar{height:100%;border-radius:4px;transition:width .6s}
+.m-buck-vals{text-align:right;min-width:90px}
+.m-buck-pct{font-size:.82rem;font-weight:700}
+.m-buck-val{font-size:.66rem;color:#aaa}
+/* top cats mini */
+.m-cats{display:flex;flex-direction:column;gap:9px}
+.m-cat-row{display:flex;align-items:center;gap:9px}
+.m-cat-rank{font-size:.65rem;font-weight:700;color:#ddd;min-width:14px}
+.m-cat-name{font-size:.77rem;color:#333;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.m-cat-bar-wrap{flex:1.5;background:#f0f0f0;border-radius:4px;height:6px;overflow:hidden}
+.m-cat-bar{height:100%;border-radius:4px}
+.m-cat-val{font-size:.74rem;font-weight:600;color:#444;min-width:72px;text-align:right;font-variant-numeric:tabular-nums}
+.m-cat-pct{font-size:.63rem;color:#bbb;min-width:34px;text-align:right}
+/* savings rows */
+.m-sav{display:flex;flex-direction:column;gap:8px}
+.m-sav-row{display:grid;grid-template-columns:56px 1fr 58px 40px;gap:7px;align-items:center}
+.m-sav-lbl{font-size:.74rem;color:#555}
+.m-sav-track{background:#f0f0f0;border-radius:4px;height:7px;overflow:hidden}
+.m-sav-fill{height:100%;border-radius:4px}
+.m-sav-val{font-size:.73rem;font-weight:600;text-align:right;font-variant-numeric:tabular-nums}
+.m-sav-pct{text-align:right}
+/* invest teaser */
+.m-inv-rows{display:flex;flex-direction:column;gap:8px}
+.m-inv-yr{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid #f5f5f5}
+.m-inv-yr:last-child{border-bottom:none}
+.m-inv-label{font-size:.74rem;color:#666}
+.m-inv-pat{font-size:.78rem;font-weight:700;color:#15803D;font-variant-numeric:tabular-nums}
+.m-inv-mult{font-size:.65rem;color:#aaa}
+/* forecast mini */
+.m-fc-rows{display:flex;flex-direction:column;gap:8px}
+.m-fc-row{display:flex;justify-content:space-between;align-items:center;padding:6px 10px;background:#FAFAFA;border-radius:7px}
+.m-fc-month{font-size:.77rem;font-weight:600;color:#333}
+.m-fc-val{font-size:.77rem;font-weight:700;color:#E85D04;font-variant-numeric:tabular-nums}
+.m-fc-diff{font-size:.65rem;color:#aaa}
 /* invest tab */
 .inv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
 .inv-card{border-radius:10px;padding:15px;border:1px solid #eaeaea;background:#fff}
@@ -171,10 +234,11 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
     <button class="bclr" id="btnClr">&times; Limpar</button>
   </div>
 
-  <div class="cards" id="cardsEl"></div>
+  <div class="cards" id="cardsEl" style="display:none"></div>
 
   <div class="tabs" id="tabsEl">
-    <button class="tab on" data-t="gastos">&#128200; Gastos</button>
+    <button class="tab on" data-t="main">&#127968; Vis&atilde;o Geral</button>
+    <button class="tab" data-t="gastos">&#128200; Gastos</button>
     <button class="tab" data-t="ganhos">&#128176; Ganhos</button>
     <button class="tab" data-t="cross">&#9878; Vs Ganhos</button>
     <button class="tab" data-t="classif">&#127919; Classifica&ccedil;&atilde;o</button>
@@ -183,8 +247,45 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
     <button class="tab" data-t="tabela">&#128203; Lan&ccedil;amentos</button>
   </div>
 
+  <!-- MAIN -->
+  <div class="panel main-panel" id="panelMain">
+    <!-- Hero KPIs -->
+    <div class="m-hero" id="mHero"></div>
+    <!-- Row 1: Chart Ganhos vs Gastos | Classificação buckets -->
+    <div class="m-grid col21">
+      <div class="mbox">
+        <div class="mbox-title">Ganhos vs Gastos por M&ecirc;s</div>
+        <div class="ch h200"><canvas id="chMain"></canvas></div>
+      </div>
+      <div class="mbox">
+        <div class="mbox-title">Classifica&ccedil;&atilde;o dos Gastos</div>
+        <div class="m-bucks" id="mBucks"></div>
+        <div style="margin-top:14px" class="ch" style="height:120px"><canvas id="chMainBucks" style="max-height:110px"></canvas></div>
+      </div>
+    </div>
+    <!-- Row 2: Top categorias | Poupança por mês | Forecast + Invest -->
+    <div class="m-grid col3">
+      <div class="mbox">
+        <div class="mbox-title">Top Categorias de Gasto <span class="badge" id="mCatMonth"></span></div>
+        <div class="m-cats" id="mCats"></div>
+      </div>
+      <div class="mbox">
+        <div class="mbox-title">Poupan&ccedil;a por M&ecirc;s</div>
+        <div class="m-sav" id="mSav"></div>
+      </div>
+      <div class="mbox">
+        <div class="mbox-title">Previs&atilde;o Pr&oacute;ximos Meses</div>
+        <div class="m-fc-rows" id="mFc"></div>
+        <div style="margin-top:14px;padding-top:12px;border-top:1px solid #f0f0f0">
+          <div class="mbox-title" style="margin-bottom:8px">Investimento &rarr; 10 anos</div>
+          <div class="m-inv-rows" id="mInv"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- GASTOS -->
-  <div class="panel" id="panelGastos">
+  <div class="panel" id="panelGastos" style="display:none">
     <div class="g2">
       <div class="box"><div class="st">% por Categoria</div><div id="catPct" class="prows"></div></div>
       <div class="box">
@@ -620,6 +721,152 @@ function renderForecastTab(rows) {
   }
 }
 
+/* ─── Main Tab ─── */
+function renderMainTab(gRows, ganhoRows) {
+  var tot  = total(gRows);
+  var totG = total(ganhoRows);
+  var saldo = totG - tot;
+  var rate  = totG > 0 ? saldo / totG * 100 : 0;
+
+  // ── Hero KPIs ──
+  var gMap  = sumMonthly(allGastos);
+  var gaMap = sumMonthly(allGanhos);
+  var allK  = uniq(Object.keys(gMap).concat(Object.keys(gaMap))).sort();
+  var lastK = allK[allK.length - 1];
+  var prevK = allK.length > 1 ? allK[allK.length - 2] : null;
+  var lastGasto = lastK ? (gMap[lastK] || 0) : 0;
+  var prevGasto = prevK ? (gMap[prevK] || 0) : 0;
+  var momDelta  = prevGasto > 0 ? (lastGasto - prevGasto) / prevGasto * 100 : 0;
+
+  // bucket totals
+  var buckTot = {Necessidade:0,Investimento:0,Lazer:0};
+  allGastos.forEach(function(r){ var b=classifMap[r.cat]||'Necessidade'; buckTot[b]=(buckTot[b]||0)+r.valor; });
+  var totAllG = total(allGastos);
+
+  function hero(lbl, val, sub, badge, badgeCls, accentCls) {
+    return '<div class="mhc '+(accentCls||'')+'">'+
+      '<div class="mhc-lbl">'+lbl+'</div>'+
+      '<div class="mhc-val">'+val+'</div>'+
+      '<div class="mhc-sub">'+sub+(badge?'&nbsp;<span class="mhc-badge '+(badgeCls||'mb-n')+'">'+badge+'</span>':'')+' </div>'+
+      '</div>';
+  }
+  document.getElementById('mHero').innerHTML =
+    hero('Total Gastos (período)', brl(tot), allGastos.length+' lançamentos', '', '', '') +
+    hero('Total Ganhos (período)', brl(totG), ganhoRows.length+' entradas', '', '', 'accent-green') +
+    hero('Saldo do Período', brl(saldo), 'Ganhos − Gastos', saldo>=0?'▲ Positivo':'▼ Negativo', saldo>=0?'mb-g':'mb-r', saldo>=0?'accent-green':'accent-red') +
+    hero('Taxa de Poupança', pct(Math.max(rate,0)), 'do total recebido', rate>=20?'Saudável':rate>=0?'Atenção':'Crítico', rate>=20?'mb-g':rate>=0?'mb-n':'mb-r', rate>=20?'accent-green':'accent-yellow') +
+    hero('Último Mês', brl(lastGasto), lastK?monthLabel(lastK):'', momDelta>0?'▲ '+pct(Math.abs(momDelta),1):momDelta<0?'▼ '+pct(Math.abs(momDelta),1):'—', momDelta>0?'mb-r':'mb-g', '') +
+    hero('Lazer+Compras', brl((buckTot.Lazer||0)), totAllG?pct((buckTot.Lazer||0)/totAllG*100)+' dos gastos':'', '', '', 'accent-yellow');
+
+  // ── Ganhos vs Gastos chart ──
+  if (currentTab === 'main') {
+    var labels  = allK.map(monthLabel);
+    var gData   = allK.map(function(k){ return gMap[k]||0; });
+    var gaData  = allK.map(function(k){ return gaMap[k]||0; });
+    var saldoD  = allK.map(function(k){ return (gaMap[k]||0)-(gMap[k]||0); });
+    makeChart('chMain', {
+      type: 'bar',
+      data: { labels: labels, datasets: [
+        { label:'Ganhos', data:gaData, backgroundColor:'rgba(21,128,61,.65)', borderRadius:5, order:2 },
+        { label:'Gastos', data:gData,  backgroundColor:'rgba(232,93,4,.65)',  borderRadius:5, order:2 },
+        { label:'Saldo',  data:saldoD, type:'line', borderColor:'#1D4ED8', borderWidth:2.5, pointRadius:4, pointBackgroundColor:'#1D4ED8', fill:false, tension:.3, order:1 }
+      ]},
+      options: { responsive:true, maintainAspectRatio:false,
+        plugins:{ legend:{display:true,labels:{font:{family:'Inter',size:11},color:'#666',boxWidth:12}},
+          tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+brl(c.parsed.y);}}} },
+        scales:{ x:{grid:{display:false},ticks:{font:{family:'Inter',size:10},color:'#bbb'}},
+          y:{grid:{color:'#f5f5f5'},ticks:{font:{family:'Inter',size:10},color:'#bbb',callback:function(v){return 'R$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}}} } }
+    });
+
+    // ── Classification donut ──
+    var bVals = [buckTot.Necessidade||0, buckTot.Investimento||0, buckTot.Lazer||0];
+    makeChart('chMainBucks', {
+      type: 'doughnut',
+      data: { labels:['Necessidade','Investimento','Lazer'], datasets:[{ data:bVals, backgroundColor:['rgba(29,78,216,.75)','rgba(21,128,61,.75)','rgba(194,65,12,.75)'], borderWidth:0, hoverOffset:6 }] },
+      options: { responsive:true, maintainAspectRatio:true, cutout:'68%',
+        plugins:{ legend:{display:false}, tooltip:{callbacks:{label:function(c){return c.label+': '+brl(c.parsed)+' ('+pct(totAllG?c.parsed/totAllG*100:0)+')';}}} } }
+    });
+  }
+
+  // ── Classification bucket bars ──
+  var bucksHTML = '';
+  [{k:'Necessidade',color:'#1D4ED8'},{k:'Investimento',color:'#15803D'},{k:'Lazer',color:'#C2410C'}].forEach(function(b){
+    var v = buckTot[b.k]||0, p = totAllG?v/totAllG*100:0;
+    bucksHTML += '<div class="m-buck-row">'+
+      '<div class="m-buck-dot" style="background:'+b.color+'"></div>'+
+      '<span class="m-buck-name">'+b.k+'</span>'+
+      '<div class="m-buck-bar-wrap"><div class="m-buck-bar" style="width:'+p.toFixed(1)+'%;background:'+b.color+'"></div></div>'+
+      '<div class="m-buck-vals"><div class="m-buck-pct" style="color:'+b.color+'">'+pct(p,1)+'</div><div class="m-buck-val">'+brl(v)+'</div></div>'+
+      '</div>';
+  });
+  document.getElementById('mBucks').innerHTML = bucksHTML;
+
+  // ── Top 5 categorias ──
+  var catPairs = sumBy(allGastos, 'cat').slice(0, 7);
+  var maxCat   = catPairs[0] ? catPairs[0][1] : 1;
+  var mCatEl = document.getElementById('mCats');
+  mCatEl.innerHTML = '';
+  catPairs.forEach(function(pair, i) {
+    var v = pair[1], p = totAllG ? v/totAllG*100 : 0;
+    var row = document.createElement('div'); row.className = 'm-cat-row';
+    row.innerHTML = '<span class="m-cat-rank">'+(i+1)+'</span>'+
+      '<span class="m-cat-name" title="'+pair[0]+'">'+pair[0]+'</span>'+
+      '<div class="m-cat-bar-wrap"><div class="m-cat-bar" style="width:'+((v/maxCat)*100).toFixed(1)+'%;background:'+catColor(pair[0])+'"></div></div>'+
+      '<span class="m-cat-val">'+brl(v)+'</span>'+
+      '<span class="m-cat-pct">'+pct(p,1)+'</span>';
+    mCatEl.appendChild(row);
+  });
+  var mMonth = document.getElementById('mCatMonth');
+  if (mMonth) mMonth.textContent = 'acumulado';
+
+  // ── Savings per month ──
+  var savEl = document.getElementById('mSav'); savEl.innerHTML = '';
+  var savKeys = allK.slice(-6); // last 6 months
+  savKeys.forEach(function(k) {
+    var g=gaMap[k]||0, e=gMap[k]||0, s=g-e, sp=g>0?s/g*100:0;
+    var color = sp>=20?'#15803D':sp>=0?'#EF9F27':'#E85D04';
+    var row = document.createElement('div'); row.className = 'm-sav-row';
+    row.innerHTML = '<span class="m-sav-lbl">'+monthLabel(k)+'</span>'+
+      '<div class="m-sav-track"><div class="m-sav-fill" style="width:'+Math.min(Math.max(sp,0),100).toFixed(1)+'%;background:'+color+'"></div></div>'+
+      '<span class="m-sav-val" style="color:'+color+'">'+brl(s)+'</span>'+
+      '<span class="m-sav-pct"><span class="mhc-badge '+(sp>=20?'mb-g':sp>=0?'mb-n':'mb-r')+'">'+pct(sp,0)+'</span></span>';
+    savEl.appendChild(row);
+  });
+
+  // ── Forecast next months ──
+  var fcData = buildForecastToYearEnd(allGastos);
+  var fcEl = document.getElementById('mFc'); fcEl.innerHTML = '';
+  fcData.months.slice(0, 4).forEach(function(m) {
+    var avg = Object.values(fcData.catAvg).reduce(function(s,v){return s+v;},0);
+    var row = document.createElement('div'); row.className = 'm-fc-row';
+    row.innerHTML = '<span class="m-fc-month">'+monthLabel(m)+'</span>'+
+      '<span class="m-fc-val">'+brl(avg)+'</span>'+
+      '<span class="m-fc-diff">prev.</span>';
+    fcEl.appendChild(row);
+  });
+  if (!fcData.months.length) fcEl.innerHTML = '<div style="font-size:.75rem;color:#ccc;padding:8px 0">Ano encerrado</div>';
+
+  // ── Investment teaser (milestone years) ──
+  var investBase = allGastos.filter(function(r){
+    if(!r.date) return false;
+    var mo = r.date.getMonth()+1;
+    return mo!==1&&mo!==2&&(r.cat||'').toLowerCase().indexOf('invest')!==-1;
+  });
+  var invMonths = uniq(investBase.map(function(r){return monthKey(r.date);}).filter(Boolean));
+  var avgAporte = invMonths.length > 0 ? total(investBase)/invMonths.length : 500;
+  var invEl = document.getElementById('mInv'); invEl.innerHTML = '';
+  [2,5,10].forEach(function(anos) {
+    var r2 = 0, taxa = 0.009;
+    for (var t=1;t<=anos*12;t++) r2 = r2*(1+taxa)+avgAporte;
+    var invested = avgAporte*anos*12;
+    var row = document.createElement('div'); row.className = 'm-inv-yr';
+    row.innerHTML = '<span class="m-inv-label">Em '+anos+' ano'+(anos>1?'s':'')+'</span>'+
+      '<div style="text-align:right"><div class="m-inv-pat">'+brl(r2)+'</div>'+
+      '<div class="m-inv-mult">'+brl(invested)+' invest. · '+(r2/invested).toFixed(2).replace('.',',')+'x</div></div>';
+    invEl.appendChild(row);
+  });
+}
+
 /* ─── Invest Tab ─── */
 function calcInvest(aporte, taxaMes, anos) {
   var meses = anos * 12;
@@ -785,7 +1032,7 @@ function parseSheet(text) {
 
 /* ─── State ─── */
 var allGastos = [], allGanhos = [], classifMap = {}, chartMap = {};
-var currentTab = 'gastos';
+var currentTab = 'main';
 
 /* ─── DOM ─── */
 var statusEl = $('statusEl'), appEl = $('appEl'), btnR = $('btnR'), tsEl = $('ts');
@@ -797,7 +1044,7 @@ document.querySelectorAll('.tab').forEach(function(t) {
     document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
     t.classList.add('on');
     currentTab = t.dataset.t;
-    var panels = {gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',invest:'panelInvest',tabela:'panelTabela'};
+    var panels = {main:'panelMain',gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',invest:'panelInvest',tabela:'panelTabela'};
     Object.keys(panels).forEach(function(k){
       var el = $(panels[k]);
       if (el) el.style.display = (k === currentTab ? 'block' : 'none');
@@ -903,6 +1150,7 @@ function renderAll() {
   var tot   = total(rows);
   var totG  = total(gRows);
   renderCards(rows, gRows, tot, totG);
+  renderMainTab(filtGastos(true), filtGanhos(true));
   renderGastosTab(rows, tot);
   renderGanhosTab(gRows, totG);
   renderCrossTab(rows, gRows, tot, totG);
@@ -1203,7 +1451,8 @@ function renderTable(rows, tot) {
 
 /* ─── Charts ─── */
 function renderCharts() {
-  if(currentTab==='gastos')  renderChGastos();
+  if(currentTab==='main')    renderMainTab(filtGastos(true), filtGanhos(true));
+  else if(currentTab==='gastos')  renderChGastos();
   else if(currentTab==='ganhos') renderChGanhos();
   else if(currentTab==='cross')  renderChCross();
   else if(currentTab==='classif')  renderChClassif();
