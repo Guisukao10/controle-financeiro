@@ -206,6 +206,44 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .inv-yr .yr-hi td{color:#15803D}
 .inv-yr tfoot td{font-weight:700;background:#F0FDF4;color:#15803D;border-top:2px solid #BBF7D0}
 .inv-note{font-size:.67rem;color:#bbb;margin-top:8px;line-height:1.5}
+/* ── LANÇAR TAB ── */
+.lc-wrap{max-width:640px;margin:0 auto}
+.lc-type{display:flex;gap:0;background:#f3f3f3;border-radius:10px;padding:4px;margin-bottom:20px}
+.lc-type button{flex:1;padding:9px;border:none;background:transparent;border-radius:7px;font-family:inherit;font-size:.82rem;font-weight:600;cursor:pointer;color:#aaa;transition:all .2s}
+.lc-type button.on{background:#fff;color:#1a1a1a;box-shadow:0 1px 4px rgba(0,0,0,.1)}
+.lc-type button.on.g{color:#B91C1C}.lc-type button.on.r{color:#15803D}
+.lc-form{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:500px){.lc-form{grid-template-columns:1fr}}
+.lc-full{grid-column:1/-1}
+.lf{display:flex;flex-direction:column;gap:4px}
+.lf label{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb}
+.lf input,.lf select,.lf textarea{padding:9px 12px;border:1.5px solid #E5E7EB;border-radius:8px;font-family:inherit;font-size:.85rem;color:#1a1a1a;background:#fff;outline:none;transition:border .15s}
+.lf input:focus,.lf select:focus,.lf textarea:focus{border-color:#1a1a1a}
+.lf textarea{resize:vertical;min-height:60px}
+.lc-submit{width:100%;padding:12px;background:#1a1a1a;color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.88rem;font-weight:600;cursor:pointer;transition:opacity .2s;display:flex;align-items:center;justify-content:center;gap:8px}
+.lc-submit:hover{opacity:.85}.lc-submit:disabled{opacity:.4;cursor:not-allowed}
+.lc-submit.ok{background:#15803D}.lc-submit.err{background:#B91C1C}
+.lc-feedback{text-align:center;font-size:.8rem;margin-top:10px;min-height:20px;font-weight:500}
+.lc-feedback.ok{color:#15803D}.lc-feedback.err{color:#B91C1C}
+/* script config */
+.lc-config{background:#FFFBEB;border:1px solid #FDE68A;border-radius:10px;padding:14px 16px;margin-bottom:18px}
+.lc-config summary{font-size:.78rem;font-weight:600;color:#92400E;cursor:pointer;user-select:none}
+.lc-config .lf input{font-size:.75rem;font-family:monospace}
+.lc-config-body{margin-top:12px;display:flex;flex-direction:column;gap:10px}
+.lc-cfg-status{font-size:.72rem;font-weight:600;padding:3px 9px;border-radius:20px;display:inline-block;margin-top:4px}
+.lc-cfg-ok{background:#DCFCE7;color:#15803D}.lc-cfg-no{background:#FEE2E2;color:#B91C1C}
+/* recent entries */
+.lc-hist{margin-top:20px}
+.lc-hist-title{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#ccc;margin-bottom:10px}
+.lc-hist-list{display:flex;flex-direction:column;gap:6px}
+.lc-hist-row{display:flex;align-items:center;gap:10px;padding:8px 12px;background:#fafafa;border-radius:8px;border:1px solid #f0f0f0}
+.lc-hr-date{font-size:.7rem;color:#bbb;min-width:60px}
+.lc-hr-desc{font-size:.78rem;color:#333;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.lc-hr-cat{font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:12px;background:#F3F4F6;color:#666}
+.lc-hr-val{font-size:.78rem;font-weight:700;white-space:nowrap}
+.lc-hr-val.g{color:#B91C1C}.lc-hr-val.r{color:#15803D}
+.lc-hr-del{font-size:.75rem;color:#ddd;cursor:pointer;padding:2px 5px;border:none;background:none}
+.lc-hr-del:hover{color:#B91C1C}
 /* patrimônio inicial */
 .pat-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;gap:14px}
 .pat-box .pat-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
@@ -256,6 +294,7 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
     <button class="tab" data-t="classif">&#127919; Classifica&ccedil;&atilde;o</button>
     <button class="tab" data-t="previsao">&#128200; Previs&atilde;o</button>
     <button class="tab" data-t="invest">&#128181; Investimento</button>
+    <button class="tab" data-t="lancar">&#9998; Lan&ccedil;ar</button>
     <button class="tab" data-t="tabela">&#128203; Lan&ccedil;amentos</button>
   </div>
 
@@ -423,6 +462,93 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
       <div class="st">Projeção Anual Detalhada</div>
       <div style="overflow-x:auto"><table class="inv-yr" id="invYrTable"></table></div>
       <p class="inv-note" id="invNote"></p>
+    </div>
+  </div>
+
+  <!-- LANÇAR -->
+  <div class="panel" id="panelLancar" style="display:none">
+    <div class="lc-wrap">
+
+      <!-- Script config (collapsible) -->
+      <details class="lc-config" id="lcConfigBox">
+        <summary>&#9881; Configura&ccedil;&atilde;o do Google Apps Script <span class="lc-cfg-status lc-cfg-no" id="lcCfgStatus">N&atilde;o configurado</span></summary>
+        <div class="lc-config-body">
+          <div class="lf">
+            <label>URL do Apps Script (cole aqui ap&oacute;s deploy)</label>
+            <input type="text" id="lcScriptUrl" placeholder="https://script.google.com/macros/s/.../exec"/>
+          </div>
+          <button style="padding:7px 14px;background:#1a1a1a;color:#fff;border:none;border-radius:7px;font-family:inherit;font-size:.75rem;cursor:pointer" onclick="saveScriptUrl()">Salvar URL</button>
+          <p style="font-size:.68rem;color:#aaa;line-height:1.6;margin-top:4px">
+            &#128204; Siga as instru&ccedil;&otilde;es abaixo para gerar a URL e cole aqui. A URL fica salva no navegador.
+          </p>
+        </div>
+      </details>
+
+      <!-- Type toggle -->
+      <div class="lc-type">
+        <button class="on g" id="lcBtnGasto" onclick="setLcType('gasto')">&#128308; Gasto</button>
+        <button id="lcBtnGanho" onclick="setLcType('ganho')">&#128994; Ganho</button>
+      </div>
+
+      <!-- Form -->
+      <div class="lc-form" id="lcForm">
+        <div class="lf">
+          <label>Data *</label>
+          <input type="date" id="lcData"/>
+        </div>
+        <div class="lf">
+          <label>Respons&aacute;vel *</label>
+          <select id="lcResp"></select>
+        </div>
+        <div class="lf lc-full">
+          <label>Descri&ccedil;&atilde;o *</label>
+          <input type="text" id="lcDesc" placeholder="Ex: Mercado, Sal&aacute;rio, Aluguel..."/>
+        </div>
+        <div class="lf">
+          <label>Categoria *</label>
+          <select id="lcCat"></select>
+        </div>
+        <div class="lf" id="lcTipoWrap">
+          <label>Forma de Pagamento</label>
+          <select id="lcTipo"></select>
+        </div>
+        <div class="lf">
+          <label>Valor (R$) *</label>
+          <input type="number" id="lcValor" min="0.01" step="0.01" placeholder="0,00"/>
+        </div>
+        <div class="lf lc-full">
+          <button class="lc-submit" id="lcSubmit" onclick="submitLancar()">
+            <span id="lcSubmitIcon">&#10003;</span> Lan&ccedil;ar na Planilha
+          </button>
+          <div class="lc-feedback" id="lcFeedback"></div>
+        </div>
+      </div>
+
+      <!-- Recent entries -->
+      <div class="lc-hist">
+        <div class="lc-hist-title">&#128336; Lan&ccedil;amentos recentes (este navegador)</div>
+        <div class="lc-hist-list" id="lcHistList"></div>
+      </div>
+
+      <!-- Instructions -->
+      <details style="margin-top:20px">
+        <summary style="font-size:.75rem;font-weight:600;color:#aaa;cursor:pointer">&#128218; Como configurar o Google Apps Script (passo a passo)</summary>
+        <div style="margin-top:12px;font-size:.75rem;line-height:1.8;color:#666;background:#fafafa;padding:14px;border-radius:8px">
+          <ol style="padding-left:18px">
+            <li>Abra sua planilha no Google Sheets</li>
+            <li>Clique em <strong>Extens&otilde;es → Apps Script</strong></li>
+            <li>Apague todo o c&oacute;digo que aparece e cole o c&oacute;digo abaixo</li>
+            <li>Clique em <strong>Implantar → Nova implanta&ccedil;&atilde;o</strong></li>
+            <li>Tipo: <strong>Aplicativo da Web</strong></li>
+            <li>Executar como: <strong>Eu</strong></li>
+            <li>Quem tem acesso: <strong>Qualquer pessoa</strong></li>
+            <li>Clique <strong>Implantar</strong>, autorize e copie a URL gerada</li>
+            <li>Cole a URL no campo acima e clique em <strong>Salvar URL</strong></li>
+          </ol>
+          <div style="margin-top:10px;background:#1a1a1a;color:#e8e8e8;padding:14px;border-radius:8px;font-family:monospace;font-size:.72rem;white-space:pre;overflow-x:auto" id="lcScriptCode"></div>
+        </div>
+      </details>
+
     </div>
   </div>
 
@@ -1136,7 +1262,7 @@ document.querySelectorAll('.tab').forEach(function(t) {
     document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
     t.classList.add('on');
     currentTab = t.dataset.t;
-    var panels = {main:'panelMain',gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',invest:'panelInvest',tabela:'panelTabela'};
+    var panels = {main:'panelMain',gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',invest:'panelInvest',lancar:'panelLancar',tabela:'panelTabela'};
     Object.keys(panels).forEach(function(k){
       var el = $(panels[k]);
       if (el) el.style.display = (k === currentTab ? 'block' : 'none');
@@ -1552,6 +1678,7 @@ function renderCharts() {
   else if(currentTab==='classif')  renderChClassif();
   else if(currentTab==='previsao') renderForecastTab(filtGastos(true));
   else if(currentTab==='invest')   renderInvestTab(filtGastos(true));
+  else if(currentTab==='lancar')   initLancarTab();
 }
 
 function makeChart(id, cfg) {
@@ -1690,6 +1817,223 @@ function renderMCmp(id, rows, color, invertSign) {
       '<span class="mcv">'+brl(v)+'</span><span class="mcp">'+pill+'</span>';
     el.appendChild(row);
   });
+}
+
+/* ─── Lançar Tab ─── */
+var lcType = 'gasto';
+var LC_HIST_KEY = 'cf_lancamentos_hist';
+var LC_URL_KEY  = 'cf_script_url';
+
+var GASTOS_CATS  = ['Alimentação','Assinatura','Casa','Compras','Doação','Educação','Investimento','Lazer','Moradia','Outros','Saúde / Bem estar','Transporte','Viagem'];
+var GANHOS_CATS  = ['Salário','PPR','Ticket Alimentação','Auxílio','Freelance','Outros'];
+var FORMAS_PGTO  = ['Crédito','Débito','Pix','Dinheiro','Boleto','Ticket'];
+
+var APPS_SCRIPT_CODE = [
+'// Controle Financeiro — Apps Script',
+'// Cole este código em Extensões > Apps Script da sua planilha',
+'',
+'var SHEET_GASTOS = "Gastos Detalhados";',
+'var SHEET_GANHOS = "Ganhos Detalhados";',
+'',
+'function doGet(e) {',
+'  var p = e.parameter;',
+'  try {',
+'    var ss = SpreadsheetApp.getActiveSpreadsheet();',
+'    var sheetName = p.tipo === "ganho" ? SHEET_GANHOS : SHEET_GASTOS;',
+'    var sheet = ss.getSheetByName(sheetName);',
+'    if (!sheet) return ok("Aba não encontrada: " + sheetName);',
+'',
+'    if (p.tipo === "ganho") {',
+'      sheet.appendRow([p.data, p.resp, p.desc, p.cat, p.forma, parseFloat(p.valor)]);',
+'    } else {',
+'      sheet.appendRow([p.data, p.resp, p.desc, p.cat, p.forma, parseFloat(p.valor)]);',
+'    }',
+'    return ok("ok");',
+'  } catch(err) {',
+'    return err_(err.toString());',
+'  }',
+'}',
+'',
+'function ok(msg)  { return ContentService.createTextOutput(JSON.stringify({status:"ok",msg:msg})).setMimeType(ContentService.MimeType.JSON); }',
+'function err_(m)  { return ContentService.createTextOutput(JSON.stringify({status:"error",msg:m})).setMimeType(ContentService.MimeType.JSON); }'
+].join('\n');
+
+function initLancarTab() {
+  // Set today's date
+  var today = new Date();
+  var iso = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-'+String(today.getDate()).padStart(2,'0');
+  var lcData = document.getElementById('lcData');
+  if (lcData && !lcData.value) lcData.value = iso;
+
+  // Populate responsáveis from real data
+  var lcResp = document.getElementById('lcResp');
+  if (lcResp && !lcResp.dataset.init) {
+    var resps = uniq(allGastos.concat(allGanhos).map(function(r){ return r.resp; }).filter(Boolean));
+    if (!resps.length) resps = ['Gui','Giulia'];
+    lcResp.innerHTML = resps.map(function(r){ return '<option>'+r+'</option>'; }).join('');
+    lcResp.dataset.init = '1';
+  }
+
+  // Categories & tipo
+  populateLcCat();
+
+  var lcTipo = document.getElementById('lcTipo');
+  if (lcTipo && !lcTipo.dataset.init) {
+    lcTipo.innerHTML = FORMAS_PGTO.map(function(f){ return '<option>'+f+'</option>'; }).join('');
+    lcTipo.dataset.init = '1';
+  }
+
+  // Script URL status
+  var url = localStorage.getItem(LC_URL_KEY) || '';
+  var el = document.getElementById('lcScriptUrl');
+  if (el) el.value = url;
+  updateCfgStatus(url);
+
+  // Script code display
+  var codeEl = document.getElementById('lcScriptCode');
+  if (codeEl) codeEl.textContent = APPS_SCRIPT_CODE;
+
+  renderLcHist();
+}
+
+function populateLcCat() {
+  var lcCat = document.getElementById('lcCat');
+  if (!lcCat) return;
+  var cats = lcType === 'gasto'
+    ? uniq(GASTOS_CATS.concat(allGastos.map(function(r){ return r.cat; }).filter(Boolean)))
+    : uniq(GANHOS_CATS.concat(allGanhos.map(function(r){ return r.cat; }).filter(Boolean)));
+  lcCat.innerHTML = cats.map(function(c){ return '<option>'+c+'</option>'; }).join('');
+}
+
+function setLcType(t) {
+  lcType = t;
+  document.getElementById('lcBtnGasto').className = 'on g' + (t==='gasto'?' on g':'');
+  document.getElementById('lcBtnGanho').className = (t==='ganho'?'on r':'');
+  document.getElementById('lcBtnGasto').classList.toggle('on', t==='gasto');
+  document.getElementById('lcBtnGanho').classList.toggle('on', t==='ganho');
+  document.getElementById('lcTipoWrap').style.display = t==='gasto' ? '' : 'none';
+  populateLcCat();
+}
+
+function saveScriptUrl() {
+  var url = (document.getElementById('lcScriptUrl').value || '').trim();
+  localStorage.setItem(LC_URL_KEY, url);
+  updateCfgStatus(url);
+  if (url) document.getElementById('lcConfigBox').removeAttribute('open');
+}
+
+function updateCfgStatus(url) {
+  var el = document.getElementById('lcCfgStatus');
+  if (!el) return;
+  if (url && url.indexOf('script.google.com') !== -1) {
+    el.textContent = '✓ Configurado'; el.className = 'lc-cfg-status lc-cfg-ok';
+  } else {
+    el.textContent = 'Não configurado'; el.className = 'lc-cfg-status lc-cfg-no';
+  }
+}
+
+function submitLancar() {
+  var btn  = document.getElementById('lcSubmit');
+  var fb   = document.getElementById('lcFeedback');
+  var data = document.getElementById('lcData').value;
+  var resp = document.getElementById('lcResp').value;
+  var desc = document.getElementById('lcDesc').value.trim();
+  var cat  = document.getElementById('lcCat').value;
+  var tipo = lcType === 'gasto' ? (document.getElementById('lcTipo').value) : '';
+  var valorRaw = parseFloat(document.getElementById('lcValor').value);
+
+  // Validate
+  if (!data || !resp || !desc || !cat || !valorRaw || valorRaw <= 0) {
+    fb.textContent = '⚠ Preencha todos os campos obrigatórios.';
+    fb.className = 'lc-feedback err';
+    return;
+  }
+
+  // Format date DD/MM/YYYY for sheet
+  var dp = data.split('-');
+  var dataFmt = dp[2]+'/'+dp[1]+'/'+dp[0];
+
+  var scriptUrl = (localStorage.getItem(LC_URL_KEY) || '').trim();
+  if (!scriptUrl) {
+    fb.textContent = '⚠ Configure a URL do Apps Script primeiro (clique no ⚙ acima).';
+    fb.className = 'lc-feedback err';
+    document.getElementById('lcConfigBox').setAttribute('open','');
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:rot .7s linear infinite"></span> Enviando...';
+  fb.textContent = '';
+
+  var params = [
+    'tipo='   + encodeURIComponent(lcType),
+    'data='   + encodeURIComponent(dataFmt),
+    'resp='   + encodeURIComponent(resp),
+    'desc='   + encodeURIComponent(desc),
+    'cat='    + encodeURIComponent(cat),
+    'forma='  + encodeURIComponent(tipo),
+    'valor='  + encodeURIComponent(valorRaw.toFixed(2))
+  ].join('&');
+
+  // Use no-cors fetch (Apps Script redirect doesn't support CORS fully)
+  fetch(scriptUrl + '?' + params, { method:'GET', mode:'no-cors' })
+    .then(function() {
+      // no-cors means we can't read response — assume success
+      saveLcHist({ data: dataFmt, desc: desc, cat: cat, valor: valorRaw, tipo: lcType, resp: resp });
+      btn.innerHTML = '✓ Lançado com sucesso!';
+      btn.className = 'lc-submit ok';
+      fb.textContent = desc + ' — ' + brl(valorRaw) + ' adicionado(a) na planilha.';
+      fb.className = 'lc-feedback ok';
+      document.getElementById('lcDesc').value = '';
+      document.getElementById('lcValor').value = '';
+      renderLcHist();
+      setTimeout(function() {
+        btn.innerHTML = '<span>✓</span> Lançar na Planilha';
+        btn.className = 'lc-submit';
+        btn.disabled = false;
+        fb.textContent = '';
+      }, 3500);
+    })
+    .catch(function(e) {
+      btn.innerHTML = '✓ Lançar na Planilha';
+      btn.className = 'lc-submit';
+      btn.disabled = false;
+      fb.textContent = '✗ Erro: ' + e.message;
+      fb.className = 'lc-feedback err';
+    });
+}
+
+function saveLcHist(entry) {
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem(LC_HIST_KEY) || '[]'); } catch(e) {}
+  hist.unshift(entry);
+  if (hist.length > 30) hist = hist.slice(0, 30);
+  localStorage.setItem(LC_HIST_KEY, JSON.stringify(hist));
+}
+
+function renderLcHist() {
+  var el = document.getElementById('lcHistList'); if (!el) return;
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem(LC_HIST_KEY) || '[]'); } catch(e) {}
+  if (!hist.length) { el.innerHTML = '<div style="font-size:.75rem;color:#ddd;padding:6px 0">Nenhum lançamento ainda.</div>'; return; }
+  el.innerHTML = hist.slice(0,8).map(function(h, i) {
+    return '<div class="lc-hist-row">'+
+      '<span class="lc-hr-date">'+h.data+'</span>'+
+      '<span class="lc-hr-desc" title="'+h.desc+'">'+h.desc+'</span>'+
+      '<span class="lc-hr-cat">'+h.cat+'</span>'+
+      '<span class="lc-hr-val '+(h.tipo==='gasto'?'g':'r')+'">'+
+        (h.tipo==='gasto'?'−':'+') + brl(h.valor)+'</span>'+
+      '<button class="lc-hr-del" onclick="delLcHist('+i+')" title="Remover">×</button>'+
+      '</div>';
+  }).join('');
+}
+
+function delLcHist(i) {
+  var hist = [];
+  try { hist = JSON.parse(localStorage.getItem(LC_HIST_KEY) || '[]'); } catch(e) {}
+  hist.splice(i, 1);
+  localStorage.setItem(LC_HIST_KEY, JSON.stringify(hist));
+  renderLcHist();
 }
 
 /* ─── Events ─── */
