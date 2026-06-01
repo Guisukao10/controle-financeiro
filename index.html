@@ -206,6 +206,18 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .inv-yr .yr-hi td{color:#15803D}
 .inv-yr tfoot td{font-weight:700;background:#F0FDF4;color:#15803D;border-top:2px solid #BBF7D0}
 .inv-note{font-size:.67rem;color:#bbb;margin-top:8px;line-height:1.5}
+/* patrimônio inicial */
+.pat-box{background:#F0FDF4;border:1px solid #BBF7D0;border-radius:10px;padding:14px 18px;margin-bottom:14px;display:flex;flex-wrap:wrap;align-items:center;gap:14px}
+.pat-box .pat-toggle{display:flex;align-items:center;gap:8px;cursor:pointer;user-select:none}
+.pat-box .pat-toggle input[type=checkbox]{width:16px;height:16px;accent-color:#15803D;cursor:pointer}
+.pat-box .pat-toggle span{font-size:.78rem;font-weight:600;color:#15803D}
+.pat-inputs{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.pat-field{display:flex;flex-direction:column;gap:3px}
+.pat-field label{font-size:.6rem;font-weight:700;text-transform:uppercase;color:#888;letter-spacing:.06em}
+.pat-field input[type=number]{padding:6px 10px;border:1px solid #BBF7D0;border-radius:7px;font-family:inherit;font-size:.82rem;font-weight:600;color:#15803D;background:#fff;width:130px;outline:none}
+.pat-field input[type=number]:focus{border-color:#15803D}
+.pat-total{font-size:.78rem;font-weight:700;color:#15803D;padding:6px 12px;background:#fff;border:1px solid #BBF7D0;border-radius:7px;white-space:nowrap}
+.pat-note{font-size:.67rem;color:#888;width:100%;margin-top:-4px}
 </style>
 </head>
 <body>
@@ -370,6 +382,27 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 
   <!-- INVESTIMENTO -->
   <div class="panel" id="panelInvest" style="display:none">
+
+    <!-- Patrimônio atual (toggle) -->
+    <div class="pat-box">
+      <label class="pat-toggle">
+        <input type="checkbox" id="chkPat"/>
+        <span>&#128200; Considerar patrim&ocirc;nio atual j&aacute; guardado</span>
+      </label>
+      <div class="pat-inputs" id="patInputs" style="display:none">
+        <div class="pat-field">
+          <label>Guilherme (R$)</label>
+          <input type="number" id="patG" min="0" step="100" value="0" placeholder="0"/>
+        </div>
+        <div class="pat-field">
+          <label>Giulia (R$)</label>
+          <input type="number" id="patGi" min="0" step="100" value="0" placeholder="0"/>
+        </div>
+        <div class="pat-total">Total: <span id="patTotal">R$&nbsp;0</span></div>
+      </div>
+      <p class="pat-note" id="patNote" style="display:none">&#128161; O patrim&ocirc;nio j&aacute; guardado ser&aacute; adicionado como saldo inicial e continuar&aacute; rendendo junto com os aportes mensais.</p>
+    </div>
+
     <div class="inv-slider">
       <label>Aporte mensal</label>
       <input type="range" id="slAporte" min="100" max="5000" step="50" value="500"/>
@@ -868,18 +901,19 @@ function renderMainTab(gRows, ganhoRows) {
 }
 
 /* ─── Invest Tab ─── */
-function calcInvest(aporte, taxaMes, anos) {
+function calcInvest(aporte, taxaMes, anos, patrimonioInicial) {
   var meses = anos * 12;
   var r = taxaMes / 100;
+  var pv = patrimonioInicial || 0;
   var rows = [];
-  var patrimonio = 0;
+  var patrimonio = pv;
   for (var t = 1; t <= meses; t++) {
     patrimonio = patrimonio * (1 + r) + aporte;
     if (t % 12 === 0) {
       var ano = t / 12;
-      var totalInvestido = aporte * t;
-      var juros = patrimonio - totalInvestido;
-      rows.push({ ano: ano, patrimonio: patrimonio, totalInvestido: totalInvestido, juros: juros });
+      var totalAportado = aporte * t;           // only new contributions
+      var jurosTotal = patrimonio - pv - totalAportado; // interest on everything
+      rows.push({ ano: ano, patrimonio: patrimonio, totalInvestido: totalAportado, juros: jurosTotal, patrimonioInicial: pv });
     }
   }
   return rows;
@@ -898,10 +932,16 @@ function renderInvestTab(gastoRows) {
     : 500;
   mediaInvest = Math.round(mediaInvest / 50) * 50; // round to nearest 50
 
-  // Slider elements
+  // Elements
   var slAp  = document.getElementById('slAporte');
   var slTx  = document.getElementById('slTaxa');
   var slAn  = document.getElementById('slAnos');
+  var chkPat = document.getElementById('chkPat');
+  var patInputs = document.getElementById('patInputs');
+  var patNote   = document.getElementById('patNote');
+  var patGEl    = document.getElementById('patG');
+  var patGiEl   = document.getElementById('patGi');
+  var patTotalEl= document.getElementById('patTotal');
   if (!slAp) return;
 
   // Set slider defaults from real data (only on first render)
@@ -912,39 +952,66 @@ function renderInvestTab(gastoRows) {
     slAp.dataset.init = '1';
   }
 
+  // Toggle patrimônio visibility
+  function updatePatVis() {
+    var show = chkPat.checked;
+    patInputs.style.display = show ? 'flex' : 'none';
+    patNote.style.display   = show ? 'block' : 'none';
+  }
+  chkPat.onchange = function() { updatePatVis(); refresh(); };
+
+  function getPatTotal() {
+    if (!chkPat.checked) return 0;
+    var g  = parseFloat(patGEl.value)  || 0;
+    var gi = parseFloat(patGiEl.value) || 0;
+    return g + gi;
+  }
+  function updatePatTotal() {
+    patTotalEl.textContent = brl(getPatTotal());
+  }
+  patGEl.oninput = patGiEl.oninput = function() { updatePatTotal(); refresh(); };
+  updatePatVis();
+
   function refresh() {
     var aporte = parseFloat(slAp.value);
     var taxa   = parseFloat(slTx.value);
     var anos   = parseInt(slAn.value, 10);
+    var pv     = getPatTotal();
 
     document.getElementById('svAporte').textContent = brl(aporte);
     document.getElementById('svTaxa').textContent   = taxa.toFixed(2).replace('.', ',') + '%';
     document.getElementById('svAnos').textContent   = anos + ' ano' + (anos > 1 ? 's' : '');
 
-    var rows10 = calcInvest(aporte, taxa, anos);
+    var rows10 = calcInvest(aporte, taxa, anos, pv);
     if (!rows10.length) return;
     var final = rows10[rows10.length - 1];
+    var taxaAnual = (Math.pow(1 + taxa/100, 12) - 1) * 100;
+    var totalCapital = pv + final.totalInvestido; // initial + new contributions
 
     // KPI cards
-    var taxaAnual = (Math.pow(1 + taxa/100, 12) - 1) * 100;
+    var pvCard = pv > 0
+      ? '<div class="inv-card hi"><div class="cl">Patrimônio Inicial</div><div class="cv">'+brl(pv)+'</div><div class="cs">Saldo já guardado incluído</div></div>'
+      : '';
     document.getElementById('invKpis').innerHTML =
-      '<div class="inv-card"><div class="cl">Aporte Mensal</div><div class="cv">'+brl(aporte)+'</div><div class="cs">Média histórica: '+brl(mediaInvest)+'/mês</div></div>'+
-      '<div class="inv-card"><div class="cl">Taxa Anual Equivalente</div><div class="cv">'+taxaAnual.toFixed(2).replace('.',',')+'% a.a.</div><div class="cs">'+taxa.toFixed(2).replace('.',',')+'% a.m.</div></div>'+
-      '<div class="inv-card hi"><div class="cl">Patrimônio em '+anos+' ano'+(anos>1?'s':'')+'</div><div class="cv">'+brl(final.patrimonio)+'</div><div class="cs">'+brl(final.totalInvestido)+' investidos</div></div>'+
-      '<div class="inv-card hi"><div class="cl">Juros Acumulados</div><div class="cv">'+brl(final.juros)+'</div><div class="cs">'+pct(final.juros/final.patrimonio*100,1)+' do patrimônio final</div></div>'+
-      '<div class="inv-card"><div class="cl">Total Investido</div><div class="cv">'+brl(final.totalInvestido)+'</div><div class="cs">'+anos*12+' aportes de '+brl(aporte)+'</div></div>'+
-      '<div class="inv-card"><div class="cl">Multiplicador</div><div class="cv">'+(final.patrimonio/final.totalInvestido).toFixed(2).replace('.',',')+'x</div><div class="cs">Retorno sobre capital</div></div>';
+      '<div class="inv-card"><div class="cl">Aporte Mensal</div><div class="cv">'+brl(aporte)+'</div><div class="cs">Histórico: '+brl(mediaInvest)+'/mês</div></div>'+
+      '<div class="inv-card"><div class="cl">Taxa Anual Equiv.</div><div class="cv">'+taxaAnual.toFixed(2).replace('.',',')+'% a.a.</div><div class="cs">'+taxa.toFixed(2).replace('.',',')+'% a.m.</div></div>'+
+      pvCard+
+      '<div class="inv-card hi"><div class="cl">Patrimônio em '+anos+' ano'+(anos>1?'s':'')+'</div><div class="cv">'+brl(final.patrimonio)+'</div><div class="cs">'+brl(totalCapital)+' aportados</div></div>'+
+      '<div class="inv-card hi"><div class="cl">Juros Acumulados</div><div class="cv">'+brl(final.juros)+'</div><div class="cs">'+pct(final.juros/final.patrimonio*100,1)+' do patrimônio</div></div>'+
+      '<div class="inv-card"><div class="cl">Multiplicador</div><div class="cv">'+(final.patrimonio/Math.max(totalCapital,1)).toFixed(2).replace('.',',')+'x</div><div class="cs">Retorno sobre capital total</div></div>';
 
     // Year table
     var tbl = '<thead><tr>'+
-      '<th>Ano</th><th>Aporte Acum.</th><th>Juros Acum.</th><th>Patrimônio</th><th>Rendim. Anual</th><th>% Juros</th>'+
+      '<th>Ano</th>'+(pv>0?'<th>Pat. Inicial</th>':'')+
+      '<th>Aportes Acum.</th><th>Juros Acum.</th><th>Patrimônio</th><th>Rendim. Anual</th><th>% Juros</th>'+
       '</tr></thead><tbody>';
     rows10.forEach(function(r, i) {
-      var prevPat = i > 0 ? rows10[i-1].patrimonio : 0;
+      var prevPat = i > 0 ? rows10[i-1].patrimonio : pv;
       var rendAnual = r.patrimonio - prevPat - aporte * 12;
       var cls = r.ano % 2 === 0 ? ' yr-hi' : '';
       tbl += '<tr class="'+cls+'">'+
         '<td>Ano '+r.ano+' ('+(new Date().getFullYear()+r.ano)+')</td>'+
+        (pv>0?'<td style="color:#15803D">'+brl(pv)+'</td>':'')+
         '<td>'+brl(r.totalInvestido)+'</td>'+
         '<td style="color:#15803D">'+brl(r.juros)+'</td>'+
         '<td style="font-weight:700">'+brl(r.patrimonio)+'</td>'+
@@ -957,46 +1024,37 @@ function renderInvestTab(gastoRows) {
 
     // Note
     document.getElementById('invNote').innerHTML =
-      '&#128161; Simulação com juros compostos: aporte fixo de '+brl(aporte)+'/mês a '+taxa.toFixed(2).replace('.',',')+'% a.m. ('+taxaAnual.toFixed(2).replace('.',',')+'% a.a.) por '+anos+' ano'+(anos>1?'s':'')+'. '+
-      'Média real do aporte investido na planilha (ex. Jan/Fev): <strong>'+brl(mediaInvest)+'/mês</strong>.';
+      '&#128161; Juros compostos: '+brl(aporte)+'/mês a '+taxa.toFixed(2).replace('.',',')+'% a.m. ('+taxaAnual.toFixed(2).replace('.',',')+'% a.a.) por '+anos+' ano'+(anos>1?'s':'')+
+      (pv>0?' &bull; Patrimônio inicial de <strong>'+brl(pv)+'</strong> ('+brl(parseFloat(patGEl.value)||0)+' + '+brl(parseFloat(patGiEl.value)||0)+') incluído na simulação.':'')+
+      ' &bull; Média histórica aportada: <strong>'+brl(mediaInvest)+'/mês</strong>.';
 
     // Chart
     if (currentTab === 'invest') {
-      var allMonths = [];
-      var patData = [], invData = [], jurData = [];
-      var r2 = 0;
+      var allMonths = [], patData = [], invData = [], jurData = [];
+      var r2 = pv;
       for (var t = 1; t <= anos * 12; t++) {
         r2 = r2 * (1 + taxa/100) + aporte;
-        if (t % 3 === 0 || t === 1) { // quarterly + first
+        if (t % 3 === 0 || t === 1) {
           var lbl = 'Mês ' + t;
           if (t % 12 === 0) lbl = 'Ano ' + (t/12);
           allMonths.push(lbl);
           patData.push(parseFloat(r2.toFixed(2)));
-          invData.push(aporte * t);
-          jurData.push(parseFloat((r2 - aporte*t).toFixed(2)));
+          invData.push(pv + aporte * t);
+          jurData.push(parseFloat((r2 - pv - aporte*t).toFixed(2)));
         }
       }
       makeChart('chInvest', {
         type: 'line',
-        data: {
-          labels: allMonths,
-          datasets: [
-            { label: 'Patrimônio Total', data: patData, borderColor: '#15803D', borderWidth: 2.5, pointRadius: 0, fill: true, backgroundColor: 'rgba(21,128,61,.08)', tension: .4 },
-            { label: 'Total Investido', data: invData, borderColor: '#1D4ED8', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(29,78,216,.05)', tension: .4, borderDash: [4,3] },
-            { label: 'Juros Acumulados', data: jurData, borderColor: '#EF9F27', borderWidth: 1.5, pointRadius: 0, fill: false, tension: .4, borderDash: [2,2] }
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-            legend: { display: true, labels: { font: { family: 'Inter', size: 11 }, color: '#666', boxWidth: 14 } },
-            tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + brl(c.parsed.y); } } }
-          },
-          scales: {
-            x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, color: '#bbb', maxTicksLimit: 12 } },
-            y: { grid: { color: '#f0f0f0' }, ticks: { font: { family: 'Inter', size: 10 }, color: '#bbb', callback: function(v) { return 'R$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v.toLocaleString('pt-BR')); } } }
-          }
-        }
+        data: { labels: allMonths, datasets: [
+          { label:'Patrimônio Total',  data:patData, borderColor:'#15803D', borderWidth:2.5, pointRadius:0, fill:true, backgroundColor:'rgba(21,128,61,.08)', tension:.4 },
+          { label:'Capital Investido', data:invData, borderColor:'#1D4ED8', borderWidth:2,   pointRadius:0, fill:true, backgroundColor:'rgba(29,78,216,.05)', tension:.4, borderDash:[4,3] },
+          { label:'Juros Acumulados',  data:jurData, borderColor:'#EF9F27', borderWidth:1.5, pointRadius:0, fill:false, tension:.4, borderDash:[2,2] }
+        ]},
+        options: { responsive:true, maintainAspectRatio:false,
+          plugins:{ legend:{display:true,labels:{font:{family:'Inter',size:11},color:'#666',boxWidth:14}},
+            tooltip:{callbacks:{label:function(c){return c.dataset.label+': '+brl(c.parsed.y);}}} },
+          scales:{ x:{grid:{display:false},ticks:{font:{family:'Inter',size:9},color:'#bbb',maxTicksLimit:12}},
+            y:{grid:{color:'#f0f0f0'},ticks:{font:{family:'Inter',size:10},color:'#bbb',callback:function(v){return 'R$'+(v>=1000?(v/1000).toFixed(0)+'k':v);}}} } }
       });
     }
   }
