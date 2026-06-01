@@ -400,7 +400,7 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
         </div>
         <div class="pat-total">Total: <span id="patTotal">R$&nbsp;0</span></div>
       </div>
-      <p class="pat-note" id="patNote" style="display:none">&#128161; O patrim&ocirc;nio j&aacute; guardado ser&aacute; adicionado como saldo inicial e continuar&aacute; rendendo junto com os aportes mensais.</p>
+      <p class="pat-note" id="patNote" style="display:none">&#128161; Valores carregados automaticamente da aba <strong>Dinheiro Guardado</strong>. Edite se quiser simular outro cen&aacute;rio. O saldo inicial rende junto com os aportes mensais.</p>
     </div>
 
     <div class="inv-slider">
@@ -449,8 +449,9 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 'use strict';
 
 /* ─── URLs ─── */
-var URL_GASTOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHxO0A4QTL9fxCK5OglA3Jcat2gfH4nUP1zoYbMqCdBS-F3fHpZTQ4mL2VYww9CMMBzbXz24zGhmEc/pub?gid=1589078644&single=true&output=csv';
-var URL_GANHOS = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHxO0A4QTL9fxCK5OglA3Jcat2gfH4nUP1zoYbMqCdBS-F3fHpZTQ4mL2VYww9CMMBzbXz24zGhmEc/pub?gid=792665561&single=true&output=csv';
+var URL_GASTOS   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHxO0A4QTL9fxCK5OglA3Jcat2gfH4nUP1zoYbMqCdBS-F3fHpZTQ4mL2VYww9CMMBzbXz24zGhmEc/pub?gid=1589078644&single=true&output=csv';
+var URL_GANHOS   = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHxO0A4QTL9fxCK5OglA3Jcat2gfH4nUP1zoYbMqCdBS-F3fHpZTQ4mL2VYww9CMMBzbXz24zGhmEc/pub?gid=792665561&single=true&output=csv';
+var URL_GUARDADO = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSHxO0A4QTL9fxCK5OglA3Jcat2gfH4nUP1zoYbMqCdBS-F3fHpZTQ4mL2VYww9CMMBzbXz24zGhmEc/pub?gid=1823976397&single=true&output=csv';
 
 /* ─── Config ─── */
 var CAT_COLORS = {
@@ -950,6 +951,21 @@ function renderInvestTab(gastoRows) {
     slTx.value = 0.9;
     slAn.value = 10;
     slAp.dataset.init = '1';
+
+    // Auto-fill patrimônio guardado from sheet
+    if (guardadoData && Object.keys(guardadoData).length > 0) {
+      // Match Gui/Guilherme and Giulia by partial name (case-insensitive)
+      var keys = Object.keys(guardadoData);
+      var guiKey  = keys.filter(function(k){ var kl=lo(k); return kl.indexOf('gui')!==-1 && kl.indexOf('giulia')===-1; })[0];
+      var giulKey = keys.filter(function(k){ return lo(k).indexOf('giulia')!==-1; })[0];
+      if (guiKey)  { patGEl.value  = guardadoData[guiKey].toFixed(2); }
+      if (giulKey) { patGiEl.value = guardadoData[giulKey].toFixed(2); }
+      if (guiKey || giulKey) {
+        chkPat.checked = true;
+        updatePatVis();
+        updatePatTotal();
+      }
+    }
   }
 
   // Toggle patrimônio visibility
@@ -1063,6 +1079,24 @@ function renderInvestTab(gastoRows) {
   refresh();
 }
 
+/* ─── Parse Dinheiro Guardado sheet ─── */
+function parseGuardado(text) {
+  if (!text) return {};
+  var r = Papa.parse(text, { header: true, skipEmptyLines: true });
+  if (!r.data || !r.data.length) return {};
+  var h = Object.keys(r.data[0]);
+  var cResp = findCol(h, ['responsav','resp','pessoa','nome']);
+  var cVal  = findCol(h, ['guardado','valor','value','saldo','total']);
+  if (!cResp || !cVal) return {};
+  var result = {};
+  r.data.forEach(function(row) {
+    var name = String(row[cResp] || '').trim();
+    var val  = parseMoney(row[cVal]);
+    if (name && val > 0) result[name] = val;
+  });
+  return result;
+}
+
 /* ─── Parse sheet ─── */
 function parseSheet(text) {
   var r = Papa.parse(text, {header: true, skipEmptyLines: true});
@@ -1089,7 +1123,7 @@ function parseSheet(text) {
 }
 
 /* ─── State ─── */
-var allGastos = [], allGanhos = [], classifMap = {}, chartMap = {};
+var allGastos = [], allGanhos = [], guardadoData = {}, classifMap = {}, chartMap = {};
 var currentTab = 'main';
 
 /* ─── DOM ─── */
@@ -1134,11 +1168,13 @@ function loadData() {
 
   var cb = Date.now();
   Promise.all([
-    fetch(URL_GASTOS + '&cachebust=' + cb).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }),
-    fetch(URL_GANHOS + '&cachebust=' + cb).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); })
+    fetch(URL_GASTOS   + '&cachebust=' + cb).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }),
+    fetch(URL_GANHOS   + '&cachebust=' + cb).then(function(r){ if(!r.ok) throw new Error('HTTP '+r.status); return r.text(); }),
+    fetch(URL_GUARDADO + '&cachebust=' + cb).then(function(r){ return r.ok ? r.text() : ''; }).catch(function(){ return ''; })
   ]).then(function(results) {
     allGastos = parseSheet(results[0]);
     allGanhos = parseSheet(results[1]);
+    guardadoData = parseGuardado(results[2]);
     if (!allGastos.length && !allGanhos.length) { showError('Nenhum dado encontrado.'); return; }
 
     var cats = uniq(allGastos.map(function(r){ return r.cat; }).filter(Boolean));
