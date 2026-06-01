@@ -122,6 +122,27 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .mtx .tot-row td{font-weight:600;background:#f5f5f5}
 .mtx .fcast{color:#aaa;font-style:italic}
 .no-data{text-align:center;padding:24px;color:#ccc;font-size:.82rem}
+/* invest tab */
+.inv-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px}
+.inv-card{border-radius:10px;padding:15px;border:1px solid #eaeaea;background:#fff}
+.inv-card.hi{background:#F0FDF4;border-color:#BBF7D0}
+.inv-card .cl{font-size:.62rem;font-weight:600;color:#ccc;text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.inv-card .cv{font-size:1.15rem;font-weight:700;color:#1a1a1a}
+.inv-card.hi .cv{color:#15803D}
+.inv-card .cs{font-size:.67rem;color:#aaa;margin-top:2px}
+.inv-slider{display:flex;align-items:center;gap:12px;flex-wrap:wrap;background:#F8F8F8;border-radius:8px;padding:12px 16px;margin-bottom:16px;border:1px solid #eee}
+.inv-slider label{font-size:.7rem;font-weight:600;color:#888;text-transform:uppercase;white-space:nowrap}
+.inv-slider input[type=range]{flex:1;min-width:120px;accent-color:#15803D}
+.inv-slider .sv{font-size:.85rem;font-weight:700;color:#15803D;min-width:52px;text-align:right}
+.inv-yr{width:100%;border-collapse:collapse;font-size:.78rem}
+.inv-yr th{text-align:right;font-size:.62rem;font-weight:600;text-transform:uppercase;color:#ccc;padding:6px 10px;border-bottom:2px solid #eee}
+.inv-yr th:first-child{text-align:left}
+.inv-yr td{padding:6px 10px;border-bottom:1px solid #f4f4f4;text-align:right;font-variant-numeric:tabular-nums}
+.inv-yr td:first-child{text-align:left;font-weight:600;color:#333}
+.inv-yr .yr-hi{background:#F0FDF4}
+.inv-yr .yr-hi td{color:#15803D}
+.inv-yr tfoot td{font-weight:700;background:#F0FDF4;color:#15803D;border-top:2px solid #BBF7D0}
+.inv-note{font-size:.67rem;color:#bbb;margin-top:8px;line-height:1.5}
 </style>
 </head>
 <body>
@@ -158,6 +179,7 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
     <button class="tab" data-t="cross">&#9878; Vs Ganhos</button>
     <button class="tab" data-t="classif">&#127919; Classifica&ccedil;&atilde;o</button>
     <button class="tab" data-t="previsao">&#128200; Previs&atilde;o</button>
+    <button class="tab" data-t="invest">&#128181; Investimento</button>
     <button class="tab" data-t="tabela">&#128203; Lan&ccedil;amentos</button>
   </div>
 
@@ -243,6 +265,31 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
       <div style="overflow-x:auto"><table class="mtx" id="fcTable"></table></div>
     </div>
     <div class="box"><div class="st">Distribui&ccedil;&atilde;o Prevista por Categoria</div><div class="ch h220"><canvas id="chFc"></canvas></div></div>
+  </div>
+
+  <!-- INVESTIMENTO -->
+  <div class="panel" id="panelInvest" style="display:none">
+    <div class="inv-slider">
+      <label>Aporte mensal</label>
+      <input type="range" id="slAporte" min="100" max="5000" step="50" value="500"/>
+      <span class="sv" id="svAporte">R$&nbsp;500</span>
+      <label style="margin-left:12px">Rendimento/m\xeas</label>
+      <input type="range" id="slTaxa" min="0.3" max="2.0" step="0.05" value="0.9"/>
+      <span class="sv" id="svTaxa">0,90%</span>
+      <label style="margin-left:12px">Horizonte</label>
+      <input type="range" id="slAnos" min="1" max="10" step="1" value="10"/>
+      <span class="sv" id="svAnos">10 anos</span>
+    </div>
+    <div class="inv-kpis" id="invKpis"></div>
+    <div class="box">
+      <div class="st">Evolu&ccedil;&atilde;o do Patrim&ocirc;nio ao Longo do Tempo</div>
+      <div class="ch h220"><canvas id="chInvest"></canvas></div>
+    </div>
+    <div class="box">
+      <div class="st">Projeção Anual Detalhada</div>
+      <div style="overflow-x:auto"><table class="inv-yr" id="invYrTable"></table></div>
+      <p class="inv-note" id="invNote"></p>
+    </div>
   </div>
 
   <!-- TABELA -->
@@ -573,6 +620,144 @@ function renderForecastTab(rows) {
   }
 }
 
+/* ─── Invest Tab ─── */
+function calcInvest(aporte, taxaMes, anos) {
+  var meses = anos * 12;
+  var r = taxaMes / 100;
+  var rows = [];
+  var patrimonio = 0;
+  for (var t = 1; t <= meses; t++) {
+    patrimonio = patrimonio * (1 + r) + aporte;
+    if (t % 12 === 0) {
+      var ano = t / 12;
+      var totalInvestido = aporte * t;
+      var juros = patrimonio - totalInvestido;
+      rows.push({ ano: ano, patrimonio: patrimonio, totalInvestido: totalInvestido, juros: juros });
+    }
+  }
+  return rows;
+}
+
+function renderInvestTab(gastoRows) {
+  // Compute average monthly investment from data (excluding Jan/Feb)
+  var investRows = gastoRows.filter(function(r) {
+    if (!r.date) return false;
+    var mo = r.date.getMonth() + 1;
+    return mo !== 1 && mo !== 2 && (r.cat || '').toLowerCase().indexOf('invest') !== -1;
+  });
+  var investMonths = uniq(investRows.map(function(r){ return monthKey(r.date); }).filter(Boolean));
+  var mediaInvest = investMonths.length > 0
+    ? total(investRows) / investMonths.length
+    : 500;
+  mediaInvest = Math.round(mediaInvest / 50) * 50; // round to nearest 50
+
+  // Slider elements
+  var slAp  = document.getElementById('slAporte');
+  var slTx  = document.getElementById('slTaxa');
+  var slAn  = document.getElementById('slAnos');
+  if (!slAp) return;
+
+  // Set slider defaults from real data (only on first render)
+  if (!slAp.dataset.init) {
+    slAp.value = Math.min(Math.max(mediaInvest, 100), 5000);
+    slTx.value = 0.9;
+    slAn.value = 10;
+    slAp.dataset.init = '1';
+  }
+
+  function refresh() {
+    var aporte = parseFloat(slAp.value);
+    var taxa   = parseFloat(slTx.value);
+    var anos   = parseInt(slAn.value, 10);
+
+    document.getElementById('svAporte').textContent = brl(aporte);
+    document.getElementById('svTaxa').textContent   = taxa.toFixed(2).replace('.', ',') + '%';
+    document.getElementById('svAnos').textContent   = anos + ' ano' + (anos > 1 ? 's' : '');
+
+    var rows10 = calcInvest(aporte, taxa, anos);
+    if (!rows10.length) return;
+    var final = rows10[rows10.length - 1];
+
+    // KPI cards
+    var taxaAnual = (Math.pow(1 + taxa/100, 12) - 1) * 100;
+    document.getElementById('invKpis').innerHTML =
+      '<div class="inv-card"><div class="cl">Aporte Mensal</div><div class="cv">'+brl(aporte)+'</div><div class="cs">Média histórica: '+brl(mediaInvest)+'/mês</div></div>'+
+      '<div class="inv-card"><div class="cl">Taxa Anual Equivalente</div><div class="cv">'+taxaAnual.toFixed(2).replace('.',',')+'% a.a.</div><div class="cs">'+taxa.toFixed(2).replace('.',',')+'% a.m.</div></div>'+
+      '<div class="inv-card hi"><div class="cl">Patrimônio em '+anos+' ano'+(anos>1?'s':'')+'</div><div class="cv">'+brl(final.patrimonio)+'</div><div class="cs">'+brl(final.totalInvestido)+' investidos</div></div>'+
+      '<div class="inv-card hi"><div class="cl">Juros Acumulados</div><div class="cv">'+brl(final.juros)+'</div><div class="cs">'+pct(final.juros/final.patrimonio*100,1)+' do patrimônio final</div></div>'+
+      '<div class="inv-card"><div class="cl">Total Investido</div><div class="cv">'+brl(final.totalInvestido)+'</div><div class="cs">'+anos*12+' aportes de '+brl(aporte)+'</div></div>'+
+      '<div class="inv-card"><div class="cl">Multiplicador</div><div class="cv">'+(final.patrimonio/final.totalInvestido).toFixed(2).replace('.',',')+'x</div><div class="cs">Retorno sobre capital</div></div>';
+
+    // Year table
+    var tbl = '<thead><tr>'+
+      '<th>Ano</th><th>Aporte Acum.</th><th>Juros Acum.</th><th>Patrimônio</th><th>Rendim. Anual</th><th>% Juros</th>'+
+      '</tr></thead><tbody>';
+    rows10.forEach(function(r, i) {
+      var prevPat = i > 0 ? rows10[i-1].patrimonio : 0;
+      var rendAnual = r.patrimonio - prevPat - aporte * 12;
+      var cls = r.ano % 2 === 0 ? ' yr-hi' : '';
+      tbl += '<tr class="'+cls+'">'+
+        '<td>Ano '+r.ano+' ('+(new Date().getFullYear()+r.ano)+')</td>'+
+        '<td>'+brl(r.totalInvestido)+'</td>'+
+        '<td style="color:#15803D">'+brl(r.juros)+'</td>'+
+        '<td style="font-weight:700">'+brl(r.patrimonio)+'</td>'+
+        '<td style="color:#15803D">'+brl(Math.max(rendAnual,0))+'</td>'+
+        '<td>'+pct(r.juros/r.patrimonio*100,1)+'</td>'+
+        '</tr>';
+    });
+    tbl += '</tbody>';
+    document.getElementById('invYrTable').innerHTML = tbl;
+
+    // Note
+    document.getElementById('invNote').innerHTML =
+      '&#128161; Simulação com juros compostos: aporte fixo de '+brl(aporte)+'/mês a '+taxa.toFixed(2).replace('.',',')+'% a.m. ('+taxaAnual.toFixed(2).replace('.',',')+'% a.a.) por '+anos+' ano'+(anos>1?'s':'')+'. '+
+      'Média real do aporte investido na planilha (ex. Jan/Fev): <strong>'+brl(mediaInvest)+'/mês</strong>.';
+
+    // Chart
+    if (currentTab === 'invest') {
+      var allMonths = [];
+      var patData = [], invData = [], jurData = [];
+      var r2 = 0;
+      for (var t = 1; t <= anos * 12; t++) {
+        r2 = r2 * (1 + taxa/100) + aporte;
+        if (t % 3 === 0 || t === 1) { // quarterly + first
+          var lbl = 'Mês ' + t;
+          if (t % 12 === 0) lbl = 'Ano ' + (t/12);
+          allMonths.push(lbl);
+          patData.push(parseFloat(r2.toFixed(2)));
+          invData.push(aporte * t);
+          jurData.push(parseFloat((r2 - aporte*t).toFixed(2)));
+        }
+      }
+      makeChart('chInvest', {
+        type: 'line',
+        data: {
+          labels: allMonths,
+          datasets: [
+            { label: 'Patrimônio Total', data: patData, borderColor: '#15803D', borderWidth: 2.5, pointRadius: 0, fill: true, backgroundColor: 'rgba(21,128,61,.08)', tension: .4 },
+            { label: 'Total Investido', data: invData, borderColor: '#1D4ED8', borderWidth: 2, pointRadius: 0, fill: true, backgroundColor: 'rgba(29,78,216,.05)', tension: .4, borderDash: [4,3] },
+            { label: 'Juros Acumulados', data: jurData, borderColor: '#EF9F27', borderWidth: 1.5, pointRadius: 0, fill: false, tension: .4, borderDash: [2,2] }
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: {
+            legend: { display: true, labels: { font: { family: 'Inter', size: 11 }, color: '#666', boxWidth: 14 } },
+            tooltip: { callbacks: { label: function(c) { return c.dataset.label + ': ' + brl(c.parsed.y); } } }
+          },
+          scales: {
+            x: { grid: { display: false }, ticks: { font: { family: 'Inter', size: 9 }, color: '#bbb', maxTicksLimit: 12 } },
+            y: { grid: { color: '#f0f0f0' }, ticks: { font: { family: 'Inter', size: 10 }, color: '#bbb', callback: function(v) { return 'R$' + (v >= 1000 ? (v/1000).toFixed(0)+'k' : v.toLocaleString('pt-BR')); } } }
+          }
+        }
+      });
+    }
+  }
+
+  slAp.oninput = slTx.oninput = slAn.oninput = refresh;
+  refresh();
+}
+
 /* ─── Parse sheet ─── */
 function parseSheet(text) {
   var r = Papa.parse(text, {header: true, skipEmptyLines: true});
@@ -612,7 +797,7 @@ document.querySelectorAll('.tab').forEach(function(t) {
     document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
     t.classList.add('on');
     currentTab = t.dataset.t;
-    var panels = {gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',tabela:'panelTabela'};
+    var panels = {gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',invest:'panelInvest',tabela:'panelTabela'};
     Object.keys(panels).forEach(function(k){
       var el = $(panels[k]);
       if (el) el.style.display = (k === currentTab ? 'block' : 'none');
@@ -723,6 +908,7 @@ function renderAll() {
   renderCrossTab(rows, gRows, tot, totG);
   renderClassifTab(rows);
   renderForecastTab(filtGastos(true));
+  renderInvestTab(filtGastos(true));
   renderTable(rows, tot);
   renderCharts();
 }
@@ -1022,6 +1208,7 @@ function renderCharts() {
   else if(currentTab==='cross')  renderChCross();
   else if(currentTab==='classif')  renderChClassif();
   else if(currentTab==='previsao') renderForecastTab(filtGastos(true));
+  else if(currentTab==='invest')   renderInvestTab(filtGastos(true));
 }
 
 function makeChart(id, cfg) {
