@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Metas &amp; Objetivos · Suks &amp; Giu System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/shared.css"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<nav class="sgs-nav">
+  <a class="sgs-nav-brand" href="../">
+    <div class="sgs-nav-logo">S&G</div>
+    <span class="sgs-nav-name">Suks &amp; Giu System</span>
+  </a>
+  <div class="sgs-nav-links">
+    <a class="sgs-nav-link" href="../financeiro/">💰 Financeiro</a>
+    <a class="sgs-nav-link active" href="../metas/">🎯 Metas</a>
+    <a class="sgs-nav-link" href="../nutricao/">🥗 Nutrição</a>
+    <a class="sgs-nav-link" href="../">← Home</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">🎯 Metas &amp; Objetivos</div>
+      <div class="page-sub">Do sonho de 10 anos ao que você faz hoje — tudo conectado</div>
+    </div>
+    <button onclick="openModal(null)"
+      style="padding:8px 16px;background:#1a1a1a;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer">
+      + Nova meta
+    </button>
+  </div>
+
+  <!-- Overview cards -->
+  <div class="overview-grid" id="overviewGrid"></div>
+
+  <!-- Connection bar -->
+  <div class="conn-bar" id="connBar"></div>
+
+  <!-- Cascade breadcrumb -->
+  <div class="cascade" id="cascade"></div>
+
+  <!-- Horizon tabs -->
+  <div class="horizons" id="horizonTabs"></div>
+
+  <!-- Main panel (changes per horizon) -->
+  <div id="mainPanel"></div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-bg hidden" id="modalBg">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modalTitle">Nova meta</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalForm"></div>
+  </div>
+</div>
+
+<script src="app.js"></script>
+</body>
+</html>
