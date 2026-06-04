@@ -2151,14 +2151,24 @@ function simSetVal(cat, month, val) {
 }
 
 function simGetPlanMonths() {
-  // All months from current month to end of year
+  // Current month through end of year
   var now = new Date();
   var months = [];
   for (var m = now.getMonth()+1; m <= 12; m++) {
     months.push(now.getFullYear()+'-'+String(m).padStart(2,'0'));
   }
-  // If we already have saved data for next year months, include those too
   return months;
+}
+
+function simGetRefMonths() {
+  // The 3 calendar months immediately before the current month
+  var now = new Date();
+  var refs = [];
+  for (var i = 3; i >= 1; i--) {
+    var d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+    refs.push(d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0'));
+  }
+  return refs;
 }
 
 function simFillAverages() {
@@ -2220,9 +2230,8 @@ function renderSimTab() {
   var ganhoMs  = uniq(allGanhos.map(function(r){return monthKey(r.date);}).filter(Boolean)).sort();
   var avgGanho = ganhoMs.length ? total(allGanhos)/ganhoMs.length : 0;
 
-  // Last 3 real months as reference (read-only)
-  var realMs  = uniq(allGastos.map(function(r){return monthKey(r.date);}).filter(Boolean)).sort();
-  var refMs   = realMs.slice(-3);
+  // 3 months before current month as reference (read-only)
+  var refMs = simGetRefMonths();
 
   // Real spending map {cat:{month:total}}
   var realMap = {};
