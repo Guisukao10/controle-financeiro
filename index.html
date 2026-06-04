@@ -2215,22 +2215,37 @@ function showSimSaved(msg) {
 }
 
 function renderSimTab() {
-  var months  = simGetPlanMonths();
-  var cats    = uniq(allGastos.map(function(r){return r.cat;}).filter(Boolean)).sort();
-  var ganhoMs = uniq(allGanhos.map(function(r){return monthKey(r.date);}).filter(Boolean)).sort();
+  var months   = simGetPlanMonths();
+  var cats     = uniq(allGastos.map(function(r){return r.cat;}).filter(Boolean)).sort();
+  var ganhoMs  = uniq(allGanhos.map(function(r){return monthKey(r.date);}).filter(Boolean)).sort();
   var avgGanho = ganhoMs.length ? total(allGanhos)/ganhoMs.length : 0;
 
-  // Bucket order
-  var buckets = ['Necessidade','Investimento','Lazer'];
+  // Last 3 real months as reference (read-only)
+  var realMs  = uniq(allGastos.map(function(r){return monthKey(r.date);}).filter(Boolean)).sort();
+  var refMs   = realMs.slice(-3);
+
+  // Real spending map {cat:{month:total}}
+  var realMap = {};
+  allGastos.forEach(function(r){
+    var c=r.cat||'Outros', m=monthKey(r.date); if(!m) return;
+    if(!realMap[c]) realMap[c]={};
+    realMap[c][m] = (realMap[c][m]||0)+r.valor;
+  });
+  var realColTot = {};
+  refMs.forEach(function(m){
+    realColTot[m]=cats.reduce(function(s,c){return s+(realMap[c]&&realMap[c][m]||0);},0);
+  });
+
+  // Buckets
+  var buckets    = ['Necessidade','Investimento','Lazer'];
   var bucketCats = {Necessidade:[],Investimento:[],Lazer:[]};
   cats.forEach(function(c){ var b=classifMap[c]||'Necessidade'; bucketCats[b].push(c); });
 
-  // Build totals per month and per cat
+  // Plan totals
   var colTotals = {}; months.forEach(function(m){ colTotals[m]=0; });
   var catTotals = {}; cats.forEach(function(c){ catTotals[c]=0; });
   var buckTotals = {Necessidade:0,Investimento:0,Lazer:0};
   var grandTotal = 0;
-
   cats.forEach(function(c){
     months.forEach(function(m){
       var v=simGetVal(c,m)||0;
@@ -2254,66 +2269,95 @@ function renderSimTab() {
     return '<div class="sim-kpi '+k.cls+'"><div class="sk-lbl">'+k.lbl+'</div><div class="sk-val">'+k.val+'</div><div class="sk-sub">'+k.sub+'</div></div>';
   }).join('');
 
+  var totalCols = refMs.length + months.length;
+
   // ── Table ──
-  var html = '<thead><tr>'+
-    '<th style="text-align:left">Categoria</th>'+
-    '<th style="text-align:left">Bucket</th>';
-  months.forEach(function(m){ html+='<th>'+monthLabel(m)+'</th>'; });
-  html += '<th>Total</th><th>% Gasto</th><th>Média/mês</th></tr></thead><tbody>';
+  var html = '<thead>';
+  // Group header
+  html += '<tr>';
+  html += '<th colspan="2" style="text-align:left;border-right:2px solid #e0e0e0"></th>';
+  if(refMs.length) html += '<th colspan="'+refMs.length+'" style="text-align:center;color:#bbb;font-size:.6rem;background:#f9f9f9;border-right:2px dashed #ddd">&#128197; REALIZADO</th>';
+  html += '<th colspan="'+months.length+'" style="text-align:center;color:#1D4ED8;font-size:.6rem;background:#F0F4FF">&#9997; PLANEJADO</th>';
+  html += '<th colspan="3"></th></tr>';
+  // Column headers
+  html += '<tr><th style="text-align:left">Categoria</th><th style="text-align:center">Bucket</th>';
+  refMs.forEach(function(m){
+    html += '<th style="color:#bbb;background:#f9f9f9;font-style:italic">'+monthLabel(m)+'</th>';
+  });
+  if(refMs.length) html += '';
+  months.forEach(function(m){ html+='<th style="color:#1D4ED8;background:#F0F4FF">'+monthLabel(m)+'</th>'; });
+  html += '<th>Total Plan.</th><th>% Total</th><th>M\xe9dia/m\xeas</th></tr></thead><tbody>';
 
   buckets.forEach(function(buck){
     var bCats = bucketCats[buck]; if(!bCats.length) return;
-    var bColor = {Necessidade:'#1D4ED8',Investimento:'#15803D',Lazer:'#C2410C'}[buck];
+    var bColor  = {Necessidade:'#1D4ED8',Investimento:'#15803D',Lazer:'#C2410C'}[buck];
     var pillCls = {Necessidade:'nec',Investimento:'inv',Lazer:'laz'}[buck];
 
-    // Bucket separator row
-    html += '<tr class="bucket-sep"><td colspan="'+(months.length+4)+'">'+buck+'</td></tr>';
+    html += '<tr class="bucket-sep"><td colspan="'+(totalCols+5)+'">'+buck+'</td></tr>';
 
     bCats.forEach(function(cat){
-      var cTot = catTotals[cat];
+      var cTot       = catTotals[cat];
       var pctOfTotal = grandTotal ? cTot/grandTotal*100 : 0;
-      var cAvg = months.length ? cTot/months.length : 0;
-      var inpCls = 'p-inp '+pillCls+'-inp';
+      var cAvg       = months.length ? cTot/months.length : 0;
+      var inpCls     = 'p-inp '+pillCls+'-inp';
 
-      html += '<tr data-cat-row="'+cat+'">';
+      html += '<tr>';
       html += '<td>'+cat+'</td>';
-      html += '<td><span class="pct-pill '+pillCls+'">'+buck.charAt(0)+'</span></td>';
+      html += '<td style="text-align:center"><span class="pct-pill '+pillCls+'">'+buck.charAt(0)+'</span></td>';
 
+      // Reference columns (read-only)
+      refMs.forEach(function(m){
+        var rv = realMap[cat]&&realMap[cat][m]||0;
+        var isLast = m===refMs[refMs.length-1];
+        html += '<td style="color:#999;font-size:.75rem;font-variant-numeric:tabular-nums;background:#f9f9f9'+(isLast?';border-right:2px dashed #ddd':'')+'">'+(rv>0?brl(rv):'—')+'</td>';
+      });
+
+      // Editable plan columns
       months.forEach(function(m){
-        var v = simGetVal(cat,m);
-        var dispV = v!==null ? v : '';
-        html += '<td><input class="'+inpCls+(dispV!==''?' has-val':'')+'" type="number" min="0" step="50" '+
+        var v    = simGetVal(cat,m);
+        var refV = realMap[cat]&&realMap[cat][refMs[refMs.length-1]]||0; // last real as hint
+        var dispV= v!==null ? v : '';
+        html += '<td style="background:#F8FAFF"><input class="'+inpCls+(dispV!==''?' has-val':'')+'" type="number" min="0" step="50" '+
           'data-sim-cat="'+cat.replace(/"/g,'&quot;')+'" data-sim-month="'+m+'" '+
-          'value="'+dispV+'" placeholder="—"/></td>';
+          'value="'+dispV+'" placeholder="'+(refV>0?Math.round(refV):'—')+'"/></td>';
       });
 
       html += '<td class="col-tot">'+(cTot>0?brl(cTot):'—')+'</td>';
-      html += '<td><div style="display:flex;align-items:center;gap:5px">'+
-        '<div style="flex:1;background:#f0f0f0;border-radius:4px;height:6px;overflow:hidden;min-width:40px">'+
-        '<div style="height:100%;border-radius:4px;background:'+bColor+';width:'+Math.min(pctOfTotal,100).toFixed(1)+'%"></div></div>'+
-        '<span style="font-size:.7rem;color:#888;min-width:32px">'+pct(pctOfTotal,1)+'</span></div></td>';
-      html += '<td class="col-tot" style="font-size:.74rem;color:#888">'+(cAvg>0?brl(cAvg):'—')+'</td>';
+      html += '<td><div style="display:flex;align-items:center;gap:4px">'+
+        '<div style="flex:1;background:#f0f0f0;border-radius:3px;height:6px;overflow:hidden;min-width:36px">'+
+        '<div style="height:100%;border-radius:3px;background:'+bColor+';width:'+Math.min(pctOfTotal,100).toFixed(1)+'%"></div></div>'+
+        '<span style="font-size:.68rem;color:#888;min-width:30px">'+pct(pctOfTotal,1)+'</span></div></td>';
+      html += '<td class="col-tot" style="font-size:.73rem;color:#888">'+(cAvg>0?brl(cAvg):'—')+'</td>';
       html += '</tr>';
     });
   });
 
-  // Footer totals
-  html += '</tbody><tfoot><tr><td colspan="2">Total Planejado</td>';
-  months.forEach(function(m){
-    html += '<td>'+(colTotals[m]>0?brl(colTotals[m]):'—')+'</td>';
+  // Footer
+  html += '</tbody><tfoot><tr><td colspan="2">Total</td>';
+  refMs.forEach(function(m){
+    var isLast=m===refMs[refMs.length-1];
+    html+='<td style="background:#f9f9f9;color:#888'+(isLast?';border-right:2px dashed #ddd':'')+'">'+(realColTot[m]>0?brl(realColTot[m]):'—')+'</td>';
   });
-  html += '<td>'+brl(grandTotal)+'</td><td>100%</td><td>'+brl(avgPlanned)+'</td></tr>';
+  months.forEach(function(m){
+    html+='<td style="background:#F0F4FF;color:#1D4ED8">'+(colTotals[m]>0?brl(colTotals[m]):'—')+'</td>';
+  });
+  html+='<td>'+brl(grandTotal)+'</td><td>100%</td><td>'+brl(avgPlanned)+'</td></tr>';
 
-  // Ganho row
-  html += '<tr style="background:#F0FDF4"><td colspan="2" style="color:#15803D;font-weight:600">Receita Estimada</td>';
-  months.forEach(function(){ html+='<td style="color:#15803D">'+brl(avgGanho)+'</td>'; });
+  // Receita row
+  html+='<tr style="background:#F0FDF4"><td colspan="2" style="color:#15803D;font-weight:600">Receita Estimada</td>';
+  refMs.forEach(function(){html+='<td style="background:#f9f9f9"></td>';});
+  months.forEach(function(){html+='<td style="color:#15803D;background:#F0FDF4">'+brl(avgGanho)+'</td>';});
   html += '<td style="color:#15803D">'+brl(avgGanho*months.length)+'</td><td></td><td style="color:#15803D">'+brl(avgGanho)+'</td></tr>';
 
   // Saldo row
   html += '<tr style="background:#F8F8F8"><td colspan="2" style="font-weight:600">Saldo Estimado</td>';
+  refMs.forEach(function(m){
+    var s=avgGanho-(realColTot[m]||0);
+    html+='<td style="font-size:.73rem;background:#f9f9f9;color:'+(s>=0?'#15803D':'#B91C1C')+'">'+brl(s)+'</td>';
+  });
   months.forEach(function(m){
     var s=avgGanho-(colTotals[m]||0);
-    html+='<td style="font-weight:700;color:'+(s>=0?'#15803D':'#B91C1C')+'">'+brl(s)+'</td>';
+    html+='<td style="font-weight:700;background:#F8FAFF;color:'+(s>=0?'#15803D':'#B91C1C')+'">'+brl(s)+'</td>';
   });
   var totalSaldo = avgGanho*months.length - grandTotal;
   html += '<td style="font-weight:700;color:'+(totalSaldo>=0?'#15803D':'#B91C1C')+'">'+brl(totalSaldo)+'</td>';
