@@ -569,6 +569,10 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
       <div class="st">Distribui&ccedil;&atilde;o Planejada vs Meta Ideal</div>
       <div id="simProgress"></div>
     </div>
+    <div class="box" style="margin-top:14px">
+      <div class="st">Gastos Reais por Categoria &times; M&ecirc;s &mdash; Refer&ecirc;ncia (clique para expandir descri&ccedil;&otilde;es)</div>
+      <div style="overflow-x:auto"><table class="mtx" id="catMonthTable2"></table></div>
+    </div>
   </div>
 
   <!-- LANÇAR -->
@@ -1555,7 +1559,8 @@ function renderGastosTab(rows, tot) {
 }
 
 /* ─── Category × Month matrix ─── */
-function renderCatMonthTable(realRows) {
+function renderCatMonthTable(realRows, targetId) {
+  targetId = targetId || 'catMonthTable';
   var FORECAST_MONTHS = 3;
   var fc      = buildForecast(realRows, FORECAST_MONTHS);
   var fcMonths = fc.months || [];
@@ -1721,7 +1726,7 @@ function renderCatMonthTable(realRows) {
   html+='<td>'+brl(avgTot)+'</td></tr></tbody>';
   if(fcMonths.length) html+='<tfoot><tr><td colspan="'+colSpan+'" style="font-size:.65rem;color:#bbb;padding:6px 8px">* Previs\xe3o baseada na m\xe9dia hist\xf3rica &bull; '+colSpan+' colunas</td></tr></tfoot>';
 
-  var tbl = $('catMonthTable');
+  var tbl = $(targetId);
   tbl.innerHTML = html;
 
   // ── Level 1: Category click ──
@@ -2445,6 +2450,9 @@ function renderSimTab() {
     progRow('Investimento',actInv,20,'rgba(21,128,61,.7)','inv')+
     progRow('Lazer',actLaz,30,'rgba(194,65,12,.7)','laz')+
     '<p style="font-size:.67rem;color:#bbb;margin-top:8px">Meta sugerida: Necessidade ≤50% · Investimento ≥20% · Lazer ≤30% (regra 50/20/30)</p>';
+
+  // Reference table below
+  renderCatMonthTable(allGastos, 'catMonthTable2');
 }
 
 /* ─── Lançar Tab ─── */
