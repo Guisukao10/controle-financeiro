@@ -124,16 +124,27 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .no-data{text-align:center;padding:24px;color:#ccc;font-size:.82rem}
 /* drill-down */
 .mtx .cat-row{cursor:pointer;transition:background .15s}
-.mtx .cat-row:hover{background:#f5f8ff}
-.mtx .cat-row td:first-child{display:flex;align-items:center;gap:6px}
-.mtx .cat-arrow{font-size:.65rem;color:#bbb;transition:transform .2s;display:inline-block;flex-shrink:0}
-.mtx .cat-row.open .cat-arrow{transform:rotate(90deg)}
-.mtx .drill-row{display:none;background:#FAFBFF}
-.mtx .drill-row.vis{display:table-row}
-.mtx .drill-row td{padding:4px 8px 4px 26px;font-size:.72rem;color:#666;border-bottom:1px solid #f0f0f0}
-.mtx .drill-row td:first-child{color:#555;font-style:italic}
-.mtx .drill-sub{font-size:.68rem;color:#bbb;white-space:nowrap}
-.mtx .drill-tot td{background:#EFF6FF;font-size:.73rem;font-weight:600;color:#1D4ED8}
+.mtx .cat-row:hover td{background:#f5f8ff}
+.mtx .cat-arrow{font-size:.62rem;color:#bbb;transition:transform .2s;display:inline-block;margin-right:5px}
+.mtx .cat-row.open .cat-arrow{transform:rotate(90deg);color:#1D4ED8}
+/* level-2: description group rows */
+.mtx .desc-row{display:none;background:#F7F9FF;cursor:pointer}
+.mtx .desc-row.vis{display:table-row}
+.mtx .desc-row:hover td{background:#EFF3FF}
+.mtx .desc-row td{padding:5px 8px 5px 28px;font-size:.75rem;border-bottom:1px solid #eef0f8}
+.mtx .desc-row td:first-child{color:#333;font-weight:500}
+.mtx .desc-arrow{font-size:.58rem;color:#bbb;margin-right:4px;display:inline-block;transition:transform .18s}
+.mtx .desc-row.open .desc-arrow{transform:rotate(90deg);color:#E85D04}
+.mtx .desc-badge{display:inline-block;font-size:.6rem;font-weight:700;padding:1px 6px;border-radius:10px;background:#E0E7FF;color:#3730A3;margin-left:6px;vertical-align:middle}
+/* level-3: individual entry rows */
+.mtx .entry-row{display:none;background:#FFFDF7}
+.mtx .entry-row.vis{display:table-row}
+.mtx .entry-row td{padding:4px 8px 4px 46px;font-size:.71rem;color:#888;border-bottom:1px solid #f5f5f0}
+.mtx .entry-row td:first-child{color:#666}
+.mtx .esub{font-size:.64rem;color:#bbb;margin-left:5px}
+/* subtotal rows */
+.mtx .desc-tot td{background:#EFF6FF;font-size:.72rem;font-weight:600;color:#1D4ED8;padding:4px 8px 4px 28px}
+.mtx .hint-row td{font-size:.63rem;color:#bbb;padding:4px 8px 4px 10px;font-style:italic;border:none}
 /* ── MAIN TAB ── */
 .main-panel{padding:0;background:transparent;border:none}
 .m-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
@@ -1449,118 +1460,169 @@ function renderGastosTab(rows, tot) {
 /* ─── Category × Month matrix ─── */
 function renderCatMonthTable(realRows) {
   var FORECAST_MONTHS = 3;
-  var fc = buildForecast(realRows, FORECAST_MONTHS);
+  var fc      = buildForecast(realRows, FORECAST_MONTHS);
   var fcMonths = fc.months || [];
   var fcAvg    = fc.catAvg || {};
 
   var cats   = uniq(realRows.map(function(r){ return r.cat; }).filter(Boolean));
   var realMs = uniq(realRows.map(function(r){ return monthKey(r.date); }).filter(Boolean)).sort();
   var allMs  = realMs.concat(fcMonths);
+  var fcSet  = {}; fcMonths.forEach(function(m){ fcSet[m]=true; });
 
-  // {cat: {month: value}}
+  // vmap: {cat: {month: total}}
   var vmap = {};
   realRows.forEach(function(r) {
-    var c = r.cat||'Outros', m = monthKey(r.date); if(!m) return;
-    if(!vmap[c]) vmap[c] = {};
+    var c=r.cat||'Outros', m=monthKey(r.date); if(!m) return;
+    if(!vmap[c]) vmap[c]={};
     vmap[c][m] = (vmap[c][m]||0) + r.valor;
   });
 
-  // {cat: {month: [{desc,resp,valor,date}]}}
-  var dmap = {};
+  // descMap: {cat: {desc: {month: [rows]}}}
+  var descMap = {};
   realRows.forEach(function(r) {
-    var c = r.cat||'Outros', m = monthKey(r.date); if(!m) return;
-    if(!dmap[c]) dmap[c] = {};
-    if(!dmap[c][m]) dmap[c][m] = [];
-    dmap[c][m].push(r);
+    var c=r.cat||'Outros', d=r.desc||'Sem descrição', m=monthKey(r.date); if(!m) return;
+    if(!descMap[c]) descMap[c]={};
+    if(!descMap[c][d]) descMap[c][d]={};
+    if(!descMap[c][d][m]) descMap[c][d][m]=[];
+    descMap[c][d][m].push(r);
   });
 
   var mTot = {};
-  allMs.forEach(function(m){ mTot[m] = cats.reduce(function(s,c){ return s+(vmap[c]&&vmap[c][m]||0); },0); });
-  fcMonths.forEach(function(m){ mTot[m] = Object.keys(fcAvg).reduce(function(s,c){ return s+(fcAvg[c]||0); },0); });
+  allMs.forEach(function(m){ mTot[m]=cats.reduce(function(s,c){return s+(vmap[c]&&vmap[c][m]||0);},0); });
+  fcMonths.forEach(function(m){ mTot[m]=Object.keys(fcAvg).reduce(function(s,c){return s+(fcAvg[c]||0);},0); });
 
-  var fcSet = {};
-  fcMonths.forEach(function(m){ fcSet[m]=true; });
+  var colSpan = allMs.length + 2;
+  var html = '<thead><tr><th style="min-width:160px">Categoria / Descri\xe7\xe3o</th>';
+  allMs.forEach(function(m){ html+='<th'+(fcSet[m]?' style="color:#bbb;font-style:italic"':'')+'>'+monthLabel(m)+(fcSet[m]?' *':'')+'</th>'; });
+  html += '<th>Total/M\xe9dia</th></tr></thead><tbody>';
 
-  var colSpan = allMs.length + 2; // cat + months + avg
-
-  var html = '<thead><tr><th style="min-width:130px">Categoria</th>';
-  allMs.forEach(function(m){ html += '<th'+(fcSet[m]?' style="color:#bbb;font-style:italic"':'')+'>'+monthLabel(m)+(fcSet[m]?' *':'')+'</th>'; });
-  html += '<th>M\xe9dia/m\xeas</th></tr></thead><tbody>';
+  // hint row
+  html += '<tr class="hint-row"><td colspan="'+colSpan+'">▶ Clique numa categoria para ver descri\xe7\xf5es &bull; Clique numa descri\xe7\xe3o para ver os lan\xe7amentos individuais</td></tr>';
 
   cats.forEach(function(cat, ci) {
-    var rowTot = 0;
-    var catId = 'cat-' + ci;
+    var catId = 'cat-'+ci;
+    var catTot = 0;
+    allMs.forEach(function(m){ if(!fcSet[m]) catTot+=(vmap[cat]&&vmap[cat][m]||0); });
+    var catAvg = realMs.length ? catTot/realMs.length : 0;
 
-    // ── Category summary row (clickable) ──
+    // ── Level 1: Category row ──
     html += '<tr class="cat-row" data-cat="'+catId+'">';
-    html += '<td><span class="cat-arrow">&#9654;</span>' + cat + '</td>';
-    allMs.forEach(function(m) {
-      var v = fcSet[m] ? (fcAvg[cat]||0) : (vmap[cat]&&vmap[cat][m]||0);
-      if (!fcSet[m] && v > 0) rowTot += v;
-      html += '<td class="'+(fcSet[m]?'fcast':'')+'">'+(v>0?brl(v):'—')+'</td>';
+    html += '<td><span class="cat-arrow">&#9654;</span><strong>'+cat+'</strong></td>';
+    allMs.forEach(function(m){
+      var v=fcSet[m]?(fcAvg[cat]||0):(vmap[cat]&&vmap[cat][m]||0);
+      html+='<td class="'+(fcSet[m]?'fcast':'')+'">'+(v>0?brl(v):'—')+'</td>';
     });
-    var avg = realMs.length ? rowTot/realMs.length : 0;
-    html += '<td style="font-weight:600">'+(avg>0?brl(avg):'—')+'</td></tr>';
+    html+='<td style="font-weight:600">'+(catAvg>0?brl(catAvg):'—')+'</td></tr>';
 
-    // ── Drill-down: one sub-row per real month that has items ──
-    realMs.forEach(function(m) {
-      var items = dmap[cat] && dmap[cat][m];
-      if (!items || !items.length) return;
+    // ── Level 2: Description group rows ──
+    var descs = Object.keys(descMap[cat]||{});
+    // sort descs by total value desc
+    descs.sort(function(a,b){
+      var ta=Object.values(descMap[cat][a]).reduce(function(s,arr){return s+arr.reduce(function(ss,r){return ss+r.valor;},0);},0);
+      var tb=Object.values(descMap[cat][b]).reduce(function(s,arr){return s+arr.reduce(function(ss,r){return ss+r.valor;},0);},0);
+      return tb-ta;
+    });
 
-      // Sort by value desc
-      var sorted = items.slice().sort(function(a,b){ return b.valor-a.valor; });
-      var mTotal = sorted.reduce(function(s,r){return s+r.valor;},0);
+    descs.forEach(function(desc, di) {
+      var descId = catId+'-d'+di;
+      var descTot = 0;
+      var descCnt = 0;
 
-      sorted.forEach(function(r) {
-        var ds = r.date ? r.date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '';
-        var pct_v = mTotal ? (r.valor/mTotal*100).toFixed(0)+'%' : '';
-        html += '<tr class="drill-row" data-parent="'+catId+'">';
-        // first col: date + desc
-        html += '<td style="padding-left:28px"><span style="color:#bbb;font-size:.67rem;margin-right:5px">'+ds+'</span>'+(r.desc||'—')+'</td>';
-        // fill empty cells up to the right month column
-        allMs.forEach(function(col) {
-          if (col === m) {
-            html += '<td style="color:#444;font-weight:500">'+brl(r.valor)+'<span class="drill-sub"> '+pct_v+'</span></td>';
-          } else {
-            html += '<td></td>';
-          }
-        });
-        html += '<td><span class="drill-sub">'+(r.resp||'')+'</span></td>';
-        html += '</tr>';
+      // per-month totals for this desc
+      var descMonthTot = {};
+      realMs.forEach(function(m){
+        var entries = descMap[cat][desc][m]||[];
+        var mv = entries.reduce(function(s,r){return s+r.valor;},0);
+        if(mv>0){ descMonthTot[m]=mv; descTot+=mv; descCnt+=entries.length; }
       });
+      if(!descTot) return;
 
-      // Sub-total row for this month
-      if (sorted.length > 1) {
-        html += '<tr class="drill-row drill-tot" data-parent="'+catId+'">';
-        html += '<td style="padding-left:28px">Subtotal '+monthLabel(m)+'</td>';
-        allMs.forEach(function(col) {
-          html += col === m ? '<td>'+brl(mTotal)+'</td>' : '<td></td>';
+      var descAvg = realMs.length ? descTot/realMs.length : 0;
+      var pctOfCat = catTot ? (descTot/catTot*100).toFixed(0)+'%' : '';
+
+      // desc group row
+      html += '<tr class="desc-row" data-parent="'+catId+'" data-desc="'+descId+'">';
+      html += '<td><span class="desc-arrow">&#9654;</span>'+desc+
+              '<span class="desc-badge">'+descCnt+'×</span>'+
+              '<span style="font-size:.63rem;color:#bbb;margin-left:6px">'+pctOfCat+' da cat.</span></td>';
+      allMs.forEach(function(m){
+        var v = fcSet[m] ? 0 : (descMonthTot[m]||0);
+        html+='<td style="font-size:.73rem">'+(v>0?'<span style="color:#555">'+brl(v)+'</span>':'—')+'</td>';
+      });
+      html+='<td style="font-size:.72rem;color:#888">'+brl(descAvg)+'</td></tr>';
+
+      // ── Level 3: Individual entries ──
+      realMs.forEach(function(m){
+        var entries = descMap[cat][desc][m]||[];
+        if(!entries.length) return;
+        var mTotal = entries.reduce(function(s,r){return s+r.valor;},0);
+        var sorted = entries.slice().sort(function(a,b){return b.valor-a.valor;});
+
+        sorted.forEach(function(r,ei){
+          var entryId = descId+'-m'+m+'-e'+ei;
+          var ds = r.date?r.date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}):'';
+          var pv = mTotal?(r.valor/mTotal*100).toFixed(0)+'%':'';
+          html+='<tr class="entry-row" data-parent="'+descId+'">';
+          html+='<td>'+
+            '<span style="color:#bbb;font-size:.66rem;min-width:34px;display:inline-block">'+ds+'</span>'+
+            (r.resp?'<span style="font-size:.63rem;background:#f0f0f0;border-radius:8px;padding:1px 6px;margin-right:4px">'+r.resp+'</span>':'')+
+            (r.desc||'—')+
+            '</td>';
+          allMs.forEach(function(col){
+            html+=col===m?'<td style="color:#444;font-size:.71rem">'+brl(r.valor)+'<span class="esub"> '+pv+'</span></td>':'<td></td>';
+          });
+          html+='<td style="font-size:.68rem;color:#bbb">'+(r.tipo||'')+'</td></tr>';
         });
-        html += '<td></td></tr>';
-      }
+
+        // sub-total if multiple entries
+        if(sorted.length>1){
+          html+='<tr class="entry-row desc-tot" data-parent="'+descId+'">';
+          html+='<td style="padding-left:46px;font-size:.7rem">Subtotal '+monthLabel(m)+'</td>';
+          allMs.forEach(function(col){ html+=col===m?'<td>'+brl(mTotal)+'</td>':'<td></td>'; });
+          html+='<td></td></tr>';
+        }
+      });
     });
   });
 
   // Total row
-  html += '<tr class="tot-row"><td>Total</td>';
-  allMs.forEach(function(m){
-    html += '<td class="'+(fcSet[m]?'fcast':'')+'">'+brl(mTot[m]||0)+'</td>';
-  });
-  var avgTot = realMs.length ? total(realRows)/realMs.length : 0;
-  html += '<td>'+brl(avgTot)+'</td></tr></tbody>';
-  if (fcMonths.length) html += '<tfoot><tr><td colspan="'+colSpan+'" style="font-size:.65rem;color:#bbb;padding:6px 8px">* Previs\xe3o baseada na m\xe9dia hist\xf3rica por categoria &bull; Clique numa categoria para ver os lan\xe7amentos</td></tr></tfoot>';
+  html+='<tr class="tot-row"><td>Total Geral</td>';
+  allMs.forEach(function(m){ html+='<td class="'+(fcSet[m]?'fcast':'')+'">'+brl(mTot[m]||0)+'</td>'; });
+  var avgTot=realMs.length?total(realRows)/realMs.length:0;
+  html+='<td>'+brl(avgTot)+'</td></tr></tbody>';
+  if(fcMonths.length) html+='<tfoot><tr><td colspan="'+colSpan+'" style="font-size:.65rem;color:#bbb;padding:6px 8px">* Previs\xe3o baseada na m\xe9dia hist\xf3rica &bull; '+colSpan+' colunas</td></tr></tfoot>';
 
   var tbl = $('catMonthTable');
   tbl.innerHTML = html;
 
-  // ── Attach click handlers ──
-  tbl.querySelectorAll('.cat-row').forEach(function(row) {
-    row.addEventListener('click', function() {
-      var id = row.dataset.cat;
-      var isOpen = row.classList.contains('open');
-      row.classList.toggle('open', !isOpen);
-      tbl.querySelectorAll('[data-parent="'+id+'"]').forEach(function(dr) {
-        dr.classList.toggle('vis', !isOpen);
+  // ── Level 1: Category click ──
+  tbl.querySelectorAll('.cat-row').forEach(function(row){
+    row.addEventListener('click', function(){
+      var id=row.dataset.cat, opening=!row.classList.contains('open');
+      row.classList.toggle('open', opening);
+      // show/hide level-2 desc rows (but NOT level-3 entries)
+      tbl.querySelectorAll('.desc-row[data-parent="'+id+'"]').forEach(function(dr){
+        dr.classList.toggle('vis', opening);
+        if(!opening){ dr.classList.remove('open'); }
+      });
+      // collapse all level-3 when closing
+      if(!opening){
+        tbl.querySelectorAll('.entry-row').forEach(function(er){
+          var pid=er.dataset.parent||'';
+          if(pid.indexOf(id)===0) er.classList.remove('vis');
+        });
+      }
+    });
+  });
+
+  // ── Level 2: Description click ──
+  tbl.querySelectorAll('.desc-row').forEach(function(row){
+    row.addEventListener('click', function(e){
+      e.stopPropagation();
+      var id=row.dataset.desc, opening=!row.classList.contains('open');
+      row.classList.toggle('open', opening);
+      tbl.querySelectorAll('.entry-row[data-parent="'+id+'"]').forEach(function(er){
+        er.classList.toggle('vis', opening);
       });
     });
   });
