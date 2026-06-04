@@ -242,6 +242,53 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .inv-yr .yr-hi td{color:#15803D}
 .inv-yr tfoot td{font-weight:700;background:#F0FDF4;color:#15803D;border-top:2px solid #BBF7D0}
 .inv-note{font-size:.67rem;color:#bbb;margin-top:8px;line-height:1.5}
+/* ── SIMULAÇÃO / PLANEJADOR ── */
+.sim-kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:14px}
+.sim-kpi{background:#fff;border:1px solid #eaeaea;border-radius:10px;padding:13px 14px}
+.sim-kpi .sk-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#bbb;margin-bottom:3px}
+.sim-kpi .sk-val{font-size:1.2rem;font-weight:700;color:#111}
+.sim-kpi .sk-sub{font-size:.67rem;color:#aaa;margin-top:2px}
+.sim-kpi.nec{border-left:3px solid #1D4ED8;background:#F8FAFF}
+.sim-kpi.inv{border-left:3px solid #15803D;background:#F0FDF8}
+.sim-kpi.laz{border-left:3px solid #C2410C;background:#FFF8F5}
+.sim-kpi.warn{border-left:3px solid #D97706;background:#FFFBEB}
+.sim-actions{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;align-items:center}
+.sim-btn{padding:7px 13px;border-radius:7px;border:1px solid #E5E7EB;background:#fff;font-family:inherit;font-size:.75rem;font-weight:600;cursor:pointer;color:#444;transition:all .15s}
+.sim-btn:hover{background:#f5f5f5}
+.sim-btn.primary{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.sim-btn.primary:hover{opacity:.85}
+.sim-btn.warn{background:#FEF3C7;color:#92400E;border-color:#FDE68A}
+/* planner table */
+.ptbl{width:100%;border-collapse:collapse;font-size:.78rem}
+.ptbl thead th{padding:7px 8px;text-align:right;font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#bbb;border-bottom:2px solid #eee;white-space:nowrap;position:sticky;top:0;background:#fff;z-index:1}
+.ptbl thead th:first-child,.ptbl thead th:nth-child(2){text-align:left}
+.ptbl tbody tr:hover td{background:#fafafa}
+.ptbl td{padding:5px 6px;border-bottom:1px solid #f5f5f5;vertical-align:middle}
+.ptbl td:first-child{font-weight:600;color:#333;min-width:120px;white-space:nowrap}
+.ptbl td:nth-child(2){text-align:center;padding:3px 6px}
+.ptbl .p-inp{width:78px;padding:4px 7px;border:1.5px solid #e0e0e0;border-radius:6px;font-family:inherit;font-size:.77rem;text-align:right;color:#333;outline:none;transition:border .15s;font-variant-numeric:tabular-nums}
+.ptbl .p-inp:focus{border-color:#1a1a1a;background:#fafafa}
+.ptbl .p-inp.has-val{border-color:#d1d5db;color:#111;font-weight:600}
+.ptbl .p-inp.nec-inp:focus{border-color:#1D4ED8}
+.ptbl .p-inp.inv-inp:focus{border-color:#15803D}
+.ptbl .p-inp.laz-inp:focus{border-color:#C2410C}
+.ptbl tfoot td{padding:7px 8px;font-weight:700;background:#f8f8f8;border-top:2px solid #eee;font-size:.78rem;text-align:right}
+.ptbl tfoot td:first-child,.ptbl tfoot td:nth-child(2){text-align:left}
+.ptbl .t-pct{font-size:.68rem;color:#888;margin-left:3px}
+.ptbl .col-tot{font-weight:700;color:#1a1a1a;text-align:right;font-variant-numeric:tabular-nums}
+.ptbl .pct-bar-cell{min-width:90px}
+.pct-pill{display:inline-block;font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:12px}
+.pct-pill.nec{background:#DBEAFE;color:#1D4ED8}
+.pct-pill.inv{background:#DCFCE7;color:#15803D}
+.pct-pill.laz{background:#FFEDD5;color:#C2410C}
+.ptbl .bucket-sep td{background:#f3f3f3;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;padding:4px 8px;border-top:2px solid #eaeaea}
+.sim-progress{margin-top:14px}
+.sp-row{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.sp-lbl{font-size:.75rem;font-weight:600;min-width:110px;color:#444}
+.sp-track{flex:1;background:#f0f0f0;border-radius:5px;height:10px;overflow:hidden}
+.sp-fill{height:100%;border-radius:5px;transition:width .4s}
+.sp-vals{font-size:.73rem;color:#666;min-width:120px;text-align:right}
+
 /* ── LANÇAR TAB ── */
 .lc-wrap{max-width:640px;margin:0 auto}
 .lc-type{display:flex;gap:0;background:#f3f3f3;border-radius:10px;padding:4px;margin-bottom:20px}
@@ -330,6 +377,7 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
     <button class="tab" data-t="classif">&#127919; Classifica&ccedil;&atilde;o</button>
     <button class="tab" data-t="previsao">&#128200; Previs&atilde;o</button>
     <button class="tab" data-t="invest">&#128181; Investimento</button>
+    <button class="tab" data-t="simulacao">&#128196; Planejador</button>
     <button class="tab" data-t="lancar">&#9998; Lan&ccedil;ar</button>
     <button class="tab" data-t="tabela">&#128203; Lan&ccedil;amentos</button>
   </div>
@@ -503,6 +551,23 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
       <div class="st">Projeção Anual Detalhada</div>
       <div style="overflow-x:auto"><table class="inv-yr" id="invYrTable"></table></div>
       <p class="inv-note" id="invNote"></p>
+    </div>
+  </div>
+
+  <!-- SIMULAÇÃO / PLANEJADOR -->
+  <div class="panel" id="panelSimulacao" style="display:none">
+    <div class="sim-kpis" id="simKpis"></div>
+    <div class="sim-actions">
+      <strong style="font-size:.78rem;color:#555">Planejador de Gastos &mdash;</strong>
+      <button class="sim-btn primary" onclick="simFillAverages()">&#128200; Preencher com m\xe9dias hist\xf3ricas</button>
+      <button class="sim-btn" onclick="simFillLastMonth()">&#128337; Repetir \xfaltimo m\xeas</button>
+      <button class="sim-btn warn" onclick="simClearAll()">&#128465; Limpar tudo</button>
+      <span id="simSavedMsg" style="font-size:.72rem;color:#15803D;font-weight:600"></span>
+    </div>
+    <div style="overflow-x:auto"><table class="ptbl" id="simTable"></table></div>
+    <div class="sim-progress box" style="margin-top:14px">
+      <div class="st">Distribui&ccedil;&atilde;o Planejada vs Meta Ideal</div>
+      <div id="simProgress"></div>
     </div>
   </div>
 
@@ -1335,7 +1400,7 @@ document.querySelectorAll('.tab').forEach(function(t) {
     document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
     t.classList.add('on');
     currentTab = t.dataset.t;
-    var panels = {main:'panelMain',gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',invest:'panelInvest',lancar:'panelLancar',tabela:'panelTabela'};
+    var panels = {main:'panelMain',gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',invest:'panelInvest',simulacao:'panelSimulacao',lancar:'panelLancar',tabela:'panelTabela'};
     Object.keys(panels).forEach(function(k){
       var el = $(panels[k]);
       if (el) el.style.display = (k === currentTab ? 'block' : 'none');
@@ -1928,8 +1993,9 @@ function renderCharts() {
   else if(currentTab==='cross')  renderChCross();
   else if(currentTab==='classif')  renderChClassif();
   else if(currentTab==='previsao') renderForecastTab(filtGastos(true));
-  else if(currentTab==='invest')   renderInvestTab(filtGastos(true));
-  else if(currentTab==='lancar')   initLancarTab();
+  else if(currentTab==='invest')    renderInvestTab(filtGastos(true));
+  else if(currentTab==='simulacao') renderSimTab();
+  else if(currentTab==='lancar')    initLancarTab();
 }
 
 function makeChart(id, cfg) {
@@ -2068,6 +2134,229 @@ function renderMCmp(id, rows, color, invertSign) {
       '<span class="mcv">'+brl(v)+'</span><span class="mcp">'+pill+'</span>';
     el.appendChild(row);
   });
+}
+
+/* ─── Simulação / Planejador ─── */
+var SIM_KEY = 'cf_sim_plan_v1';
+
+function simGetData()   { try { return JSON.parse(localStorage.getItem(SIM_KEY)||'{}'); } catch(e){ return {}; } }
+function simSaveData(d) { localStorage.setItem(SIM_KEY, JSON.stringify(d)); }
+function simGetVal(cat, month) { var d=simGetData(); return (d[cat]&&d[cat][month]!=null) ? d[cat][month] : null; }
+function simSetVal(cat, month, val) {
+  var d=simGetData();
+  if(!d[cat]) d[cat]={};
+  if(val===null||val===undefined||isNaN(val)) delete d[cat][month];
+  else d[cat][month]=val;
+  simSaveData(d);
+}
+
+function simGetPlanMonths() {
+  // All months from current month to end of year
+  var now = new Date();
+  var months = [];
+  for (var m = now.getMonth()+1; m <= 12; m++) {
+    months.push(now.getFullYear()+'-'+String(m).padStart(2,'0'));
+  }
+  // If we already have saved data for next year months, include those too
+  return months;
+}
+
+function simFillAverages() {
+  var months = simGetPlanMonths();
+  var rows = allGastos.filter(function(r){ if(!r.date) return false; var mo=r.date.getMonth()+1; return mo!==1&&mo!==2; });
+  var cats = uniq(allGastos.map(function(r){return r.cat;}).filter(Boolean));
+  var realMonths = uniq(rows.map(function(r){return monthKey(r.date);}).filter(Boolean));
+  var catAvg = {};
+  cats.forEach(function(c){
+    var tot=0;
+    realMonths.forEach(function(m){ rows.forEach(function(r){ if(r.cat===c&&monthKey(r.date)===m) tot+=r.valor; }); });
+    var mTot={}; rows.forEach(function(r){ if(r.cat===c){var mk=monthKey(r.date);if(mk)mTot[mk]=(mTot[mk]||0)+r.valor;} });
+    catAvg[c] = realMonths.length ? Object.values(mTot).reduce(function(s,v){return s+v;},0)/realMonths.length : 0;
+  });
+  var d = simGetData();
+  cats.forEach(function(c){
+    if(!d[c]) d[c]={};
+    months.forEach(function(m){ if(catAvg[c]>0) d[c][m]=Math.round(catAvg[c]); });
+  });
+  simSaveData(d);
+  renderSimTab();
+  showSimSaved('Médias aplicadas!');
+}
+
+function simFillLastMonth() {
+  var months = simGetPlanMonths();
+  var cats = uniq(allGastos.map(function(r){return r.cat;}).filter(Boolean));
+  // find last real month
+  var realMs = uniq(allGastos.map(function(r){return monthKey(r.date);}).filter(Boolean)).sort();
+  var lastM = realMs[realMs.length-1];
+  if(!lastM) return;
+  var catMap = {};
+  allGastos.forEach(function(r){ if(monthKey(r.date)===lastM){ catMap[r.cat]=(catMap[r.cat]||0)+r.valor; } });
+  var d = simGetData();
+  cats.forEach(function(c){
+    if(!d[c]) d[c]={};
+    months.forEach(function(m){ if(catMap[c]>0) d[c][m]=Math.round(catMap[c]); });
+  });
+  simSaveData(d);
+  renderSimTab();
+  showSimSaved('Último mês aplicado!');
+}
+
+function simClearAll() {
+  localStorage.removeItem(SIM_KEY);
+  renderSimTab();
+  showSimSaved('Tudo limpo.');
+}
+
+function showSimSaved(msg) {
+  var el=document.getElementById('simSavedMsg'); if(!el) return;
+  el.textContent='✓ '+msg;
+  setTimeout(function(){ el.textContent=''; }, 2500);
+}
+
+function renderSimTab() {
+  var months  = simGetPlanMonths();
+  var cats    = uniq(allGastos.map(function(r){return r.cat;}).filter(Boolean)).sort();
+  var ganhoMs = uniq(allGanhos.map(function(r){return monthKey(r.date);}).filter(Boolean)).sort();
+  var avgGanho = ganhoMs.length ? total(allGanhos)/ganhoMs.length : 0;
+
+  // Bucket order
+  var buckets = ['Necessidade','Investimento','Lazer'];
+  var bucketCats = {Necessidade:[],Investimento:[],Lazer:[]};
+  cats.forEach(function(c){ var b=classifMap[c]||'Necessidade'; bucketCats[b].push(c); });
+
+  // Build totals per month and per cat
+  var colTotals = {}; months.forEach(function(m){ colTotals[m]=0; });
+  var catTotals = {}; cats.forEach(function(c){ catTotals[c]=0; });
+  var buckTotals = {Necessidade:0,Investimento:0,Lazer:0};
+  var grandTotal = 0;
+
+  cats.forEach(function(c){
+    months.forEach(function(m){
+      var v=simGetVal(c,m)||0;
+      colTotals[m]+=v; catTotals[c]+=v; grandTotal+=v;
+      buckTotals[classifMap[c]||'Necessidade']+=v;
+    });
+  });
+  var avgPlanned = months.length ? grandTotal/months.length : 0;
+
+  // ── KPI Cards ──
+  var savRate = avgGanho>0 ? Math.max(0,(avgGanho-avgPlanned)/avgGanho*100) : 0;
+  var kpis = [
+    {lbl:'Total Planejado',val:brl(grandTotal),sub:months.length+' meses · '+brl(avgPlanned)+'/mês',cls:''},
+    {lbl:'Receita Média',val:brl(avgGanho),sub:'Média histórica de ganhos',cls:''},
+    {lbl:'Necessidade',val:pct(grandTotal?buckTotals.Necessidade/grandTotal*100:0),sub:brl(buckTotals.Necessidade),cls:'nec'},
+    {lbl:'Investimento',val:pct(grandTotal?buckTotals.Investimento/grandTotal*100:0),sub:brl(buckTotals.Investimento),cls:'inv'},
+    {lbl:'Lazer',val:pct(grandTotal?buckTotals.Lazer/grandTotal*100:0),sub:brl(buckTotals.Lazer),cls:'laz'},
+    {lbl:'Poupança Estimada',val:pct(savRate),sub:brl(avgGanho-avgPlanned)+'/mês',cls:savRate>=20?'inv':'warn'}
+  ];
+  document.getElementById('simKpis').innerHTML = kpis.map(function(k){
+    return '<div class="sim-kpi '+k.cls+'"><div class="sk-lbl">'+k.lbl+'</div><div class="sk-val">'+k.val+'</div><div class="sk-sub">'+k.sub+'</div></div>';
+  }).join('');
+
+  // ── Table ──
+  var html = '<thead><tr>'+
+    '<th style="text-align:left">Categoria</th>'+
+    '<th style="text-align:left">Bucket</th>';
+  months.forEach(function(m){ html+='<th>'+monthLabel(m)+'</th>'; });
+  html += '<th>Total</th><th>% Gasto</th><th>Média/mês</th></tr></thead><tbody>';
+
+  buckets.forEach(function(buck){
+    var bCats = bucketCats[buck]; if(!bCats.length) return;
+    var bColor = {Necessidade:'#1D4ED8',Investimento:'#15803D',Lazer:'#C2410C'}[buck];
+    var pillCls = {Necessidade:'nec',Investimento:'inv',Lazer:'laz'}[buck];
+
+    // Bucket separator row
+    html += '<tr class="bucket-sep"><td colspan="'+(months.length+4)+'">'+buck+'</td></tr>';
+
+    bCats.forEach(function(cat){
+      var cTot = catTotals[cat];
+      var pctOfTotal = grandTotal ? cTot/grandTotal*100 : 0;
+      var cAvg = months.length ? cTot/months.length : 0;
+      var inpCls = 'p-inp '+pillCls+'-inp';
+
+      html += '<tr data-cat-row="'+cat+'">';
+      html += '<td>'+cat+'</td>';
+      html += '<td><span class="pct-pill '+pillCls+'">'+buck.charAt(0)+'</span></td>';
+
+      months.forEach(function(m){
+        var v = simGetVal(cat,m);
+        var dispV = v!==null ? v : '';
+        html += '<td><input class="'+inpCls+(dispV!==''?' has-val':'')+'" type="number" min="0" step="50" '+
+          'data-sim-cat="'+cat.replace(/"/g,'&quot;')+'" data-sim-month="'+m+'" '+
+          'value="'+dispV+'" placeholder="—"/></td>';
+      });
+
+      html += '<td class="col-tot">'+(cTot>0?brl(cTot):'—')+'</td>';
+      html += '<td><div style="display:flex;align-items:center;gap:5px">'+
+        '<div style="flex:1;background:#f0f0f0;border-radius:4px;height:6px;overflow:hidden;min-width:40px">'+
+        '<div style="height:100%;border-radius:4px;background:'+bColor+';width:'+Math.min(pctOfTotal,100).toFixed(1)+'%"></div></div>'+
+        '<span style="font-size:.7rem;color:#888;min-width:32px">'+pct(pctOfTotal,1)+'</span></div></td>';
+      html += '<td class="col-tot" style="font-size:.74rem;color:#888">'+(cAvg>0?brl(cAvg):'—')+'</td>';
+      html += '</tr>';
+    });
+  });
+
+  // Footer totals
+  html += '</tbody><tfoot><tr><td colspan="2">Total Planejado</td>';
+  months.forEach(function(m){
+    html += '<td>'+(colTotals[m]>0?brl(colTotals[m]):'—')+'</td>';
+  });
+  html += '<td>'+brl(grandTotal)+'</td><td>100%</td><td>'+brl(avgPlanned)+'</td></tr>';
+
+  // Ganho row
+  html += '<tr style="background:#F0FDF4"><td colspan="2" style="color:#15803D;font-weight:600">Receita Estimada</td>';
+  months.forEach(function(){ html+='<td style="color:#15803D">'+brl(avgGanho)+'</td>'; });
+  html += '<td style="color:#15803D">'+brl(avgGanho*months.length)+'</td><td></td><td style="color:#15803D">'+brl(avgGanho)+'</td></tr>';
+
+  // Saldo row
+  html += '<tr style="background:#F8F8F8"><td colspan="2" style="font-weight:600">Saldo Estimado</td>';
+  months.forEach(function(m){
+    var s=avgGanho-(colTotals[m]||0);
+    html+='<td style="font-weight:700;color:'+(s>=0?'#15803D':'#B91C1C')+'">'+brl(s)+'</td>';
+  });
+  var totalSaldo = avgGanho*months.length - grandTotal;
+  html += '<td style="font-weight:700;color:'+(totalSaldo>=0?'#15803D':'#B91C1C')+'">'+brl(totalSaldo)+'</td>';
+  html += '<td></td><td style="font-weight:700;color:'+(avgGanho-avgPlanned>=0?'#15803D':'#B91C1C')+'">'+brl(avgGanho-avgPlanned)+'</td></tr>';
+  html += '</tfoot>';
+
+  var tbl = document.getElementById('simTable');
+  tbl.innerHTML = html;
+
+  // Wire up inputs
+  tbl.querySelectorAll('.p-inp').forEach(function(inp){
+    inp.addEventListener('input', function(){
+      inp.classList.toggle('has-val', inp.value !== '');
+    });
+    inp.addEventListener('change', function(){
+      var cat   = inp.dataset.simCat;
+      var month = inp.dataset.simMonth;
+      var val   = inp.value==='' ? null : parseFloat(inp.value);
+      simSetVal(cat, month, isNaN(val)?null:val);
+      renderSimTab(); // recalculate totals + KPIs
+    });
+  });
+
+  // ── Progress bars vs ideal ──
+  var idealNec=50, idealInv=20, idealLaz=30;
+  var actNec=grandTotal?buckTotals.Necessidade/grandTotal*100:0;
+  var actInv=grandTotal?buckTotals.Investimento/grandTotal*100:0;
+  var actLaz=grandTotal?buckTotals.Lazer/grandTotal*100:0;
+
+  function progRow(lbl,actual,ideal,color,pillcls){
+    var ok=Math.abs(actual-ideal)<=5;
+    return '<div class="sp-row">'+
+      '<span class="sp-lbl"><span class="pct-pill '+pillcls+'">'+lbl+'</span></span>'+
+      '<div class="sp-track"><div class="sp-fill" style="width:'+Math.min(actual,100).toFixed(1)+'%;background:'+color+'"></div></div>'+
+      '<span class="sp-vals">'+pct(actual,1)+' <span style="color:#bbb">· meta ≤'+ideal+'%</span> '+
+      (grandTotal?'<span style="color:'+(ok?'#15803D':'#D97706')+'">'+( ok?'✓':'!')+'</span>':'')+'</span>'+
+      '</div>';
+  }
+  document.getElementById('simProgress').innerHTML =
+    progRow('Necessidade',actNec,50,'rgba(29,78,216,.6)','nec')+
+    progRow('Investimento',actInv,20,'rgba(21,128,61,.7)','inv')+
+    progRow('Lazer',actLaz,30,'rgba(194,65,12,.7)','laz')+
+    '<p style="font-size:.67rem;color:#bbb;margin-top:8px">Meta sugerida: Necessidade ≤50% · Investimento ≥20% · Lazer ≤30% (regra 50/20/30)</p>';
 }
 
 /* ─── Lançar Tab ─── */
