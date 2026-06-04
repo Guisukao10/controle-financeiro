@@ -122,6 +122,18 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .mtx .tot-row td{font-weight:600;background:#f5f5f5}
 .mtx .fcast{color:#aaa;font-style:italic}
 .no-data{text-align:center;padding:24px;color:#ccc;font-size:.82rem}
+/* drill-down */
+.mtx .cat-row{cursor:pointer;transition:background .15s}
+.mtx .cat-row:hover{background:#f5f8ff}
+.mtx .cat-row td:first-child{display:flex;align-items:center;gap:6px}
+.mtx .cat-arrow{font-size:.65rem;color:#bbb;transition:transform .2s;display:inline-block;flex-shrink:0}
+.mtx .cat-row.open .cat-arrow{transform:rotate(90deg)}
+.mtx .drill-row{display:none;background:#FAFBFF}
+.mtx .drill-row.vis{display:table-row}
+.mtx .drill-row td{padding:4px 8px 4px 26px;font-size:.72rem;color:#666;border-bottom:1px solid #f0f0f0}
+.mtx .drill-row td:first-child{color:#555;font-style:italic}
+.mtx .drill-sub{font-size:.68rem;color:#bbb;white-space:nowrap}
+.mtx .drill-tot td{background:#EFF6FF;font-size:.73rem;font-weight:600;color:#1D4ED8}
 /* ── MAIN TAB ── */
 .main-panel{padding:0;background:transparent;border:none}
 .m-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
@@ -1439,14 +1451,13 @@ function renderCatMonthTable(realRows) {
   var FORECAST_MONTHS = 3;
   var fc = buildForecast(realRows, FORECAST_MONTHS);
   var fcMonths = fc.months || [];
-  var fcRows   = fc.rows   || [];
   var fcAvg    = fc.catAvg || {};
 
   var cats   = uniq(realRows.map(function(r){ return r.cat; }).filter(Boolean));
   var realMs = uniq(realRows.map(function(r){ return monthKey(r.date); }).filter(Boolean)).sort();
   var allMs  = realMs.concat(fcMonths);
 
-  // Build value map: {cat: {month: value}}
+  // {cat: {month: value}}
   var vmap = {};
   realRows.forEach(function(r) {
     var c = r.cat||'Outros', m = monthKey(r.date); if(!m) return;
@@ -1454,44 +1465,105 @@ function renderCatMonthTable(realRows) {
     vmap[c][m] = (vmap[c][m]||0) + r.valor;
   });
 
-  // Month totals (real)
+  // {cat: {month: [{desc,resp,valor,date}]}}
+  var dmap = {};
+  realRows.forEach(function(r) {
+    var c = r.cat||'Outros', m = monthKey(r.date); if(!m) return;
+    if(!dmap[c]) dmap[c] = {};
+    if(!dmap[c][m]) dmap[c][m] = [];
+    dmap[c][m].push(r);
+  });
+
   var mTot = {};
   allMs.forEach(function(m){ mTot[m] = cats.reduce(function(s,c){ return s+(vmap[c]&&vmap[c][m]||0); },0); });
-  // Forecast totals
   fcMonths.forEach(function(m){ mTot[m] = Object.keys(fcAvg).reduce(function(s,c){ return s+(fcAvg[c]||0); },0); });
 
   var fcSet = {};
   fcMonths.forEach(function(m){ fcSet[m]=true; });
 
-  var html = '<thead><tr><th>Categoria</th>';
-  allMs.forEach(function(m){ html += '<th' + (fcSet[m]?' style="color:#bbb;font-style:italic"':'') + '>' + monthLabel(m) + (fcSet[m]?' *':'') + '</th>'; });
-  html += '<th>Média/mês</th></tr></thead><tbody>';
+  var colSpan = allMs.length + 2; // cat + months + avg
 
-  cats.forEach(function(cat) {
-    var rowTot = 0, cnt = 0;
-    html += '<tr><td>' + cat + '</td>';
+  var html = '<thead><tr><th style="min-width:130px">Categoria</th>';
+  allMs.forEach(function(m){ html += '<th'+(fcSet[m]?' style="color:#bbb;font-style:italic"':'')+'>'+monthLabel(m)+(fcSet[m]?' *':'')+'</th>'; });
+  html += '<th>M\xe9dia/m\xeas</th></tr></thead><tbody>';
+
+  cats.forEach(function(cat, ci) {
+    var rowTot = 0;
+    var catId = 'cat-' + ci;
+
+    // ── Category summary row (clickable) ──
+    html += '<tr class="cat-row" data-cat="'+catId+'">';
+    html += '<td><span class="cat-arrow">&#9654;</span>' + cat + '</td>';
     allMs.forEach(function(m) {
       var v = fcSet[m] ? (fcAvg[cat]||0) : (vmap[cat]&&vmap[cat][m]||0);
-      if (!fcSet[m] && v > 0) { rowTot += v; cnt++; }
-      var isFc = fcSet[m];
-      html += '<td class="' + (isFc?'fcast':'') + '">' + (v>0?brl(v):'—') + '</td>';
+      if (!fcSet[m] && v > 0) rowTot += v;
+      html += '<td class="'+(fcSet[m]?'fcast':'')+'">'+(v>0?brl(v):'—')+'</td>';
     });
-    var avg = cnt > 0 ? rowTot/realMs.length : 0;
-    html += '<td style="font-weight:600">' + (avg>0?brl(avg):'—') + '</td></tr>';
+    var avg = realMs.length ? rowTot/realMs.length : 0;
+    html += '<td style="font-weight:600">'+(avg>0?brl(avg):'—')+'</td></tr>';
+
+    // ── Drill-down: one sub-row per real month that has items ──
+    realMs.forEach(function(m) {
+      var items = dmap[cat] && dmap[cat][m];
+      if (!items || !items.length) return;
+
+      // Sort by value desc
+      var sorted = items.slice().sort(function(a,b){ return b.valor-a.valor; });
+      var mTotal = sorted.reduce(function(s,r){return s+r.valor;},0);
+
+      sorted.forEach(function(r) {
+        var ds = r.date ? r.date.toLocaleDateString('pt-BR',{day:'2-digit',month:'2-digit'}) : '';
+        var pct_v = mTotal ? (r.valor/mTotal*100).toFixed(0)+'%' : '';
+        html += '<tr class="drill-row" data-parent="'+catId+'">';
+        // first col: date + desc
+        html += '<td style="padding-left:28px"><span style="color:#bbb;font-size:.67rem;margin-right:5px">'+ds+'</span>'+(r.desc||'—')+'</td>';
+        // fill empty cells up to the right month column
+        allMs.forEach(function(col) {
+          if (col === m) {
+            html += '<td style="color:#444;font-weight:500">'+brl(r.valor)+'<span class="drill-sub"> '+pct_v+'</span></td>';
+          } else {
+            html += '<td></td>';
+          }
+        });
+        html += '<td><span class="drill-sub">'+(r.resp||'')+'</span></td>';
+        html += '</tr>';
+      });
+
+      // Sub-total row for this month
+      if (sorted.length > 1) {
+        html += '<tr class="drill-row drill-tot" data-parent="'+catId+'">';
+        html += '<td style="padding-left:28px">Subtotal '+monthLabel(m)+'</td>';
+        allMs.forEach(function(col) {
+          html += col === m ? '<td>'+brl(mTotal)+'</td>' : '<td></td>';
+        });
+        html += '<td></td></tr>';
+      }
+    });
   });
 
   // Total row
   html += '<tr class="tot-row"><td>Total</td>';
   allMs.forEach(function(m){
-    var isFc = fcSet[m];
-    html += '<td class="' + (isFc?'fcast':'') + '">' + brl(mTot[m]||0) + '</td>';
+    html += '<td class="'+(fcSet[m]?'fcast':'')+'">'+brl(mTot[m]||0)+'</td>';
   });
   var avgTot = realMs.length ? total(realRows)/realMs.length : 0;
-  html += '<td>' + brl(avgTot) + '</td></tr></tbody>';
+  html += '<td>'+brl(avgTot)+'</td></tr></tbody>';
+  if (fcMonths.length) html += '<tfoot><tr><td colspan="'+colSpan+'" style="font-size:.65rem;color:#bbb;padding:6px 8px">* Previs\xe3o baseada na m\xe9dia hist\xf3rica por categoria &bull; Clique numa categoria para ver os lan\xe7amentos</td></tr></tfoot>';
 
-  if (fcMonths.length) html += '<tfoot><tr><td colspan="'+(allMs.length+2)+'" style="font-size:.65rem;color:#bbb;padding:6px 8px">* Previsão baseada na média histórica por categoria</td></tr></tfoot>';
+  var tbl = $('catMonthTable');
+  tbl.innerHTML = html;
 
-  $('catMonthTable').innerHTML = html;
+  // ── Attach click handlers ──
+  tbl.querySelectorAll('.cat-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      var id = row.dataset.cat;
+      var isOpen = row.classList.contains('open');
+      row.classList.toggle('open', !isOpen);
+      tbl.querySelectorAll('[data-parent="'+id+'"]').forEach(function(dr) {
+        dr.classList.toggle('vis', !isOpen);
+      });
+    });
+  });
 }
 
 /* ─── Ganhos Tab ─── */
