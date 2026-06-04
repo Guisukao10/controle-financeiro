@@ -289,6 +289,45 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .sp-fill{height:100%;border-radius:5px;transition:width .4s}
 .sp-vals{font-size:.73rem;color:#666;min-width:120px;text-align:right}
 
+/* ── ACOMPANHAMENTO ── */
+.acp-header{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px}
+.acp-title{font-size:.95rem;font-weight:700;color:#1a1a1a}
+.acp-sub{font-size:.72rem;color:#aaa}
+.acp-resume{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px;margin-bottom:14px}
+.acp-card{background:#fff;border:1px solid #eaeaea;border-radius:10px;padding:12px 14px}
+.acp-card .ac-lbl{font-size:.59rem;font-weight:700;text-transform:uppercase;letter-spacing:.07em;color:#bbb;margin-bottom:3px}
+.acp-card .ac-val{font-size:1.15rem;font-weight:700}
+.acp-card .ac-sub{font-size:.66rem;color:#aaa;margin-top:2px}
+.acp-card.ok{border-left:3px solid #15803D;background:#F0FDF4}.acp-card.ok .ac-val{color:#15803D}
+.acp-card.warn{border-left:3px solid #D97706;background:#FFFBEB}.acp-card.warn .ac-val{color:#D97706}
+.acp-card.over{border-left:3px solid #B91C1C;background:#FEF2F2}.acp-card.over .ac-val{color:#B91C1C}
+/* tracking table */
+.ttbl{width:100%;border-collapse:collapse;font-size:.79rem}
+.ttbl thead th{padding:7px 10px;text-align:right;font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:#bbb;border-bottom:2px solid #eee;white-space:nowrap;background:#fff}
+.ttbl thead th:first-child{text-align:left}
+.ttbl tbody tr{border-bottom:1px solid #f5f5f5;transition:background .12s}
+.ttbl tbody tr:hover td{background:#fafafa}
+.ttbl td{padding:8px 10px;vertical-align:middle;text-align:right}
+.ttbl td:first-child{text-align:left;font-weight:600;color:#333}
+.ttbl .t-plan{color:#555}
+.ttbl .t-gasto{font-weight:700;color:#1a1a1a}
+.ttbl .t-rest{font-weight:700}
+.ttbl .t-rest.ok{color:#15803D}
+.ttbl .t-rest.warn{color:#D97706}
+.ttbl .t-rest.over{color:#B91C1C}
+.ttbl .t-bar-cell{width:120px}
+.t-bar-wrap{background:#f0f0f0;border-radius:5px;height:8px;overflow:hidden;position:relative}
+.t-bar-fill{height:100%;border-radius:5px;transition:width .5s}
+.t-bar-over{position:absolute;top:0;right:0;height:100%;background:rgba(185,28,28,.25);border-radius:0 5px 5px 0}
+.ttbl .t-status{font-size:.65rem;font-weight:700;padding:2px 8px;border-radius:12px;display:inline-block;white-space:nowrap}
+.ts-ok{background:#DCFCE7;color:#15803D}
+.ts-warn{background:#FEF9C3;color:#92400E}
+.ts-over{background:#FEE2E2;color:#B91C1C}
+.ts-empty{background:#F3F4F6;color:#9CA3AF}
+.ttbl tfoot td{padding:8px 10px;font-weight:700;background:#f8f8f8;border-top:2px solid #eee;text-align:right}
+.ttbl tfoot td:first-child{text-align:left}
+.acp-no-plan{background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:14px;font-size:.8rem;color:#92400E;text-align:center}
+
 /* ── LANÇAR TAB ── */
 .lc-wrap{max-width:640px;margin:0 auto}
 .lc-type{display:flex;gap:0;background:#f3f3f3;border-radius:10px;padding:4px;margin-bottom:20px}
@@ -556,6 +595,19 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 
   <!-- SIMULAÇÃO / PLANEJADOR -->
   <div class="panel" id="panelSimulacao" style="display:none">
+
+    <!-- Acompanhamento do mês atual -->
+    <div id="acpSection" style="margin-bottom:20px">
+      <div class="acp-header">
+        <div><div class="acp-title" id="acpTitle">Acompanhamento</div><div class="acp-sub" id="acpSub"></div></div>
+        <span style="font-size:.68rem;color:#aaa">&#128190; Planejamento salvo automaticamente no navegador</span>
+      </div>
+      <div class="acp-resume" id="acpResume"></div>
+      <div style="overflow-x:auto"><table class="ttbl" id="acpTable"></table></div>
+    </div>
+    <hr style="border:none;border-top:2px dashed #eee;margin:18px 0"/>
+
+    <!-- Planejador -->
     <div class="sim-kpis" id="simKpis"></div>
     <div class="sim-actions">
       <strong style="font-size:.78rem;color:#555">Planejador de Gastos &mdash;</strong>
@@ -2239,7 +2291,128 @@ function showSimSaved(msg) {
   setTimeout(function(){ el.textContent=''; }, 2500);
 }
 
+function renderAcompanhamento() {
+  var now     = new Date();
+  var curMonth= now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+  var cats    = uniq(allGastos.map(function(r){return r.cat;}).filter(Boolean)).sort();
+
+  // Real spending this month
+  var realMap = {};
+  allGastos.forEach(function(r){
+    if(monthKey(r.date)!==curMonth) return;
+    realMap[r.cat]=(realMap[r.cat]||0)+r.valor;
+  });
+
+  // Planned this month
+  var planMap = {};
+  var hasPlan = false;
+  cats.forEach(function(c){
+    var v = simGetVal(c, curMonth);
+    if(v!==null && v>0){ planMap[c]=v; hasPlan=true; }
+  });
+
+  var titleEl = document.getElementById('acpTitle');
+  var subEl   = document.getElementById('acpSub');
+  if(titleEl) titleEl.textContent = 'Acompanhamento — ' + monthLabel(curMonth);
+  if(subEl)   subEl.textContent   = now.toLocaleDateString('pt-BR',{day:'2-digit',month:'long',year:'numeric'});
+
+  if(!hasPlan){
+    document.getElementById('acpResume').innerHTML='';
+    document.getElementById('acpTable').innerHTML=
+      '<tbody><tr><td colspan="6"><div class="acp-no-plan">'+
+      '📋 Nenhum orçamento planejado para '+monthLabel(curMonth)+'. '+
+      'Preencha a tabela abaixo para começar a acompanhar seus gastos.</div></td></tr></tbody>';
+    return;
+  }
+
+  var totalPlan  = Object.values(planMap).reduce(function(s,v){return s+v;},0);
+  var totalGasto = Object.keys(planMap).reduce(function(s,c){return s+(realMap[c]||0);},0);
+  var totalRest  = totalPlan - totalGasto;
+  var pctUsed    = totalPlan>0 ? totalGasto/totalPlan*100 : 0;
+  var restCls    = totalRest<0?'over':pctUsed>=80?'warn':'ok';
+
+  // Days progress this month
+  var daysInMonth = new Date(now.getFullYear(), now.getMonth()+1, 0).getDate();
+  var daysPassed  = now.getDate();
+  var daysPct     = daysPassed/daysInMonth*100;
+  var expectedSpend = totalPlan * daysPassed/daysInMonth;
+  var onTrack = totalGasto <= expectedSpend * 1.05;
+
+  document.getElementById('acpResume').innerHTML =
+    '<div class="acp-card"><div class="ac-lbl">Orçamento do Mês</div><div class="ac-val">'+brl(totalPlan)+'</div><div class="ac-sub">planejado para '+monthLabel(curMonth)+'</div></div>'+
+    '<div class="acp-card"><div class="ac-lbl">Gasto até agora</div><div class="ac-val">'+brl(totalGasto)+'</div><div class="ac-sub">'+daysPassed+' de '+daysInMonth+' dias ('+pct(daysPct,0)+')</div></div>'+
+    '<div class="acp-card '+restCls+'"><div class="ac-lbl">Saldo Restante</div><div class="ac-val">'+brl(totalRest)+'</div><div class="ac-sub">'+(totalRest>=0?'disponível para gastar':'acima do orçamento')+'</div></div>'+
+    '<div class="acp-card '+(onTrack?'ok':'warn')+'"><div class="ac-lbl">Ritmo de Gasto</div><div class="ac-val">'+pct(pctUsed,1)+'</div><div class="ac-sub">'+(onTrack?'✓ dentro do ritmo esperado':'⚠ acima do esperado para hoje')+'</div></div>'+
+    '<div class="acp-card"><div class="ac-lbl">Esperado hoje</div><div class="ac-val" style="font-size:.9rem">'+brl(expectedSpend)+'</div><div class="ac-sub">com base no dia '+daysPassed+'/'+daysInMonth+'</div></div>';
+
+  // Table
+  var buckets = ['Necessidade','Investimento','Lazer'];
+  var bColor  = {Necessidade:'#1D4ED8',Investimento:'#15803D',Lazer:'#C2410C'};
+
+  var html='<thead><tr>'+
+    '<th style="text-align:left">Categoria</th>'+
+    '<th>Orçamento</th><th>Gasto</th><th>Restante</th>'+
+    '<th class="t-bar-cell">Progresso</th><th>Status</th></tr></thead><tbody>';
+
+  // Sort cats: over budget first, then by % used desc
+  var sortedCats = Object.keys(planMap).sort(function(a,b){
+    var pa=(realMap[a]||0)/planMap[a], pb=(realMap[b]||0)/planMap[b];
+    return pb-pa;
+  });
+
+  // Group by bucket
+  buckets.forEach(function(buck){
+    var bCats = sortedCats.filter(function(c){ return (classifMap[c]||'Necessidade')===buck; });
+    if(!bCats.length) return;
+    html+='<tr style="background:#f7f7f7"><td colspan="6" style="font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:'+bColor[buck]+';padding:5px 10px">'+buck+'</td></tr>';
+    bCats.forEach(function(cat){
+      var plan  = planMap[cat]||0;
+      var gasto = realMap[cat]||0;
+      var rest  = plan - gasto;
+      var used  = plan>0 ? Math.min(gasto/plan*100,100) : 0;
+      var over  = plan>0 ? Math.max(0,(gasto-plan)/plan*100) : 0;
+      var cls   = rest<0?'over':used>=80?'warn':'ok';
+      var statusTxt = gasto===0?'Não iniciado':rest<0?'Estourou '+brl(Math.abs(rest)):used>=80?'Atenção — '+brl(rest)+' restam':'OK — '+brl(rest)+' restam';
+      var statusCls = gasto===0?'ts-empty':rest<0?'ts-over':used>=80?'ts-warn':'ts-ok';
+
+      html+='<tr>'+
+        '<td>'+cat+'</td>'+
+        '<td class="t-plan">'+brl(plan)+'</td>'+
+        '<td class="t-gasto">'+brl(gasto)+'</td>'+
+        '<td class="t-rest '+cls+'">'+brl(rest)+'</td>'+
+        '<td class="t-bar-cell"><div class="t-bar-wrap">'+
+          '<div class="t-bar-fill" style="width:'+used.toFixed(1)+'%;background:'+bColor[(classifMap[cat]||'Necessidade')]+'"></div>'+
+          (over>0?'<div class="t-bar-over" style="width:'+Math.min(over,30).toFixed(1)+'%"></div>':'')+
+        '</div><div style="font-size:.63rem;color:#aaa;text-align:right;margin-top:2px">'+pct(used,0)+'</div></td>'+
+        '<td><span class="t-status '+statusCls+'">'+statusTxt+'</span></td>'+
+      '</tr>';
+    });
+  });
+
+  // Cats without plan but with spending
+  var unplanned = cats.filter(function(c){ return !planMap[c] && realMap[c]>0; });
+  if(unplanned.length){
+    html+='<tr style="background:#f7f7f7"><td colspan="6" style="font-size:.61rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;padding:5px 10px">Sem orçamento definido</td></tr>';
+    unplanned.forEach(function(cat){
+      html+='<tr><td>'+cat+'</td><td class="t-plan" style="color:#ddd">—</td>'+
+        '<td class="t-gasto">'+brl(realMap[cat])+'</td>'+
+        '<td style="color:#bbb">—</td>'+
+        '<td></td>'+
+        '<td><span class="t-status ts-empty">Sem plano</span></td></tr>';
+    });
+  }
+
+  html+='</tbody><tfoot><tr><td>Total</td><td>'+brl(totalPlan)+'</td><td>'+brl(totalGasto)+'</td>'+
+    '<td class="t-rest '+restCls+'">'+brl(totalRest)+'</td>'+
+    '<td><div class="t-bar-wrap"><div class="t-bar-fill" style="width:'+Math.min(pctUsed,100).toFixed(1)+'%;background:#1a1a1a"></div></div>'+
+    '<div style="font-size:.63rem;color:#aaa;text-align:right;margin-top:2px">'+pct(pctUsed,0)+'</div></td>'+
+    '<td><span class="t-status '+(restCls==='ok'?'ts-ok':restCls==='warn'?'ts-warn':'ts-over')+'">'+(totalRest>=0?brl(totalRest)+' restam':'Estourou '+brl(Math.abs(totalRest)))+'</span></td></tr></tfoot>';
+
+  document.getElementById('acpTable').innerHTML = html;
+}
+
 function renderSimTab() {
+  renderAcompanhamento();
   var months   = simGetPlanMonths();
   var cats     = uniq(allGastos.map(function(r){return r.cat;}).filter(Boolean)).sort();
   var ganhoMs    = uniq(allGanhos.map(function(r){return monthKey(r.date);}).filter(Boolean)).sort();
