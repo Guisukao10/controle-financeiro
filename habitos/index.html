@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0"/>
+<title>Hábitos · Suks &amp; Giu System</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="../assets/shared.css"/>
+<link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+<nav class="sgs-nav">
+  <a class="sgs-nav-brand" href="../">
+    <div class="sgs-nav-logo">S&G</div>
+    <span class="sgs-nav-name">Suks &amp; Giu System</span>
+  </a>
+  <div class="sgs-nav-links">
+    <a class="sgs-nav-link" href="../financeiro/">💰 Financeiro</a>
+    <a class="sgs-nav-link" href="../metas/">🎯 Metas</a>
+    <a class="sgs-nav-link" href="../nutricao/">🥗 Nutrição</a>
+    <a class="sgs-nav-link active" href="../habitos/">✅ Hábitos</a>
+    <a class="sgs-nav-link" href="../">← Home</a>
+  </div>
+</nav>
+
+<div class="wrap">
+
+  <div class="page-header">
+    <div>
+      <div class="page-title">✅ Hábitos</div>
+      <div class="page-sub">Construa sua rotina dia a dia — streaks, metas e consistência</div>
+    </div>
+    <button onclick="openModal(null)"
+      style="padding:8px 16px;background:#9333EA;color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.78rem;font-weight:600;cursor:pointer">
+      + Novo hábito
+    </button>
+  </div>
+
+  <div class="hab-tabs" id="habTabs"></div>
+  <div id="mainPanel"></div>
+
+</div>
+
+<!-- Modal -->
+<div class="modal-bg hidden" id="modalBg">
+  <div class="modal">
+    <div class="modal-title">
+      <span id="modalTitle">Novo Hábito</span>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div id="modalForm"></div>
+  </div>
+</div>
+
+<script src="../assets/supabase.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
