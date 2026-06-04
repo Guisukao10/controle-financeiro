@@ -145,6 +145,19 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 /* subtotal rows */
 .mtx .desc-tot td{background:#EFF6FF;font-size:.72rem;font-weight:600;color:#1D4ED8;padding:4px 8px 4px 28px}
 .mtx .hint-row td{font-size:.63rem;color:#bbb;padding:4px 8px 4px 10px;font-style:italic;border:none}
+/* editable forecast cells */
+.mtx .fc-edit{cursor:pointer;position:relative;min-width:70px}
+.mtx .fc-edit:hover{background:#FFFBEB!important}
+.mtx .fc-edit::after{content:'✏';font-size:.55rem;color:#ddd;position:absolute;top:3px;right:3px;line-height:1}
+.mtx .fc-edit:hover::after{color:#EF9F27}
+.mtx .fc-edit.overridden{background:#FFFBEB!important;color:#92400E!important;font-weight:600}
+.mtx .fc-edit.overridden::after{content:'★';color:#EF9F27}
+.mtx .fc-input-wrap{display:flex;align-items:center;gap:3px}
+.mtx .fc-inp{width:72px;padding:3px 5px;border:1.5px solid #EF9F27;border-radius:5px;font-family:inherit;font-size:.74rem;font-weight:600;color:#92400E;background:#FFFBEB;outline:none;text-align:right}
+.fc-toolbar{display:flex;align-items:center;gap:8px;background:#FFFBEB;border:1px solid #FDE68A;border-radius:8px;padding:8px 12px;margin-bottom:10px;font-size:.75rem;color:#92400E;flex-wrap:wrap}
+.fc-toolbar strong{font-weight:700}
+.fc-toolbar button{padding:4px 10px;border:1px solid #FDE68A;border-radius:6px;background:#fff;font-family:inherit;font-size:.72rem;cursor:pointer;color:#92400E}
+.fc-toolbar button:hover{background:#FEF9C3}
 /* ── MAIN TAB ── */
 .main-panel{padding:0;background:transparent;border:none}
 .m-hero{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:16px}
@@ -376,7 +389,12 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
       <div id="mcmpGastos" class="mcmp"></div>
     </div>
     <div class="box">
-      <div class="st">Gastos por Categoria &times; M&ecirc;s &mdash; Real + Previs&atilde;o (it&aacute;lico)</div>
+      <div class="st">Gastos por Categoria &times; M&ecirc;s &mdash; Real + Previs&atilde;o Edit&aacute;vel</div>
+      <div class="fc-toolbar" id="fcToolbar" style="display:none">
+        <span>&#9997; <strong>Modo previs&atilde;o ativo</strong> &mdash; clique em qualquer c\xe9lula futura (it\xe1lico) para editar o valor previsto.</span>
+        <span id="fcOvrCount"></span>
+        <button onclick="fcClearAll();renderGastosTab(filtGastos(),total(filtGastos()))">&#128465; Resetar tudo</button>
+      </div>
       <div style="overflow-x:auto"><table class="mtx" id="catMonthTable"></table></div>
     </div>
   </div>
@@ -806,6 +824,20 @@ function buildGanhoForecast(rows, nMonths) {
   });
   return { rows: forecastRows, months: futureMonths, avg: avg };
 }
+
+/* ─── Forecast overrides (user-editable per category/description per month) ─── */
+var FC_OVR_KEY = 'cf_fc_overrides_v1';
+function fcGetAll()  { try { return JSON.parse(localStorage.getItem(FC_OVR_KEY)||'{}'); } catch(e){ return {}; } }
+function fcKey(level, name, month) { return level+'|'+name+'|'+month; }
+function fcGet(level, name, month) { return fcGetAll()[fcKey(level,name,month)]; }
+function fcSet(level, name, month, val) {
+  var all = fcGetAll();
+  if (val === null || val === undefined || isNaN(val)) { delete all[fcKey(level,name,month)]; }
+  else { all[fcKey(level,name,month)] = val; }
+  localStorage.setItem(FC_OVR_KEY, JSON.stringify(all));
+}
+function fcClearAll() { localStorage.removeItem(FC_OVR_KEY); }
+function fcOverrideCount() { return Object.keys(fcGetAll()).length; }
 
 /* ─── Forecast to year-end, excluding Jan & Feb from average ─── */
 function buildForecastToYearEnd(rows) {
@@ -1491,13 +1523,22 @@ function renderCatMonthTable(realRows) {
   allMs.forEach(function(m){ mTot[m]=cats.reduce(function(s,c){return s+(vmap[c]&&vmap[c][m]||0);},0); });
   fcMonths.forEach(function(m){ mTot[m]=Object.keys(fcAvg).reduce(function(s,c){return s+(fcAvg[c]||0);},0); });
 
+  // Show/update toolbar
+  var ovrCount = fcOverrideCount();
+  var toolbar = $('fcToolbar');
+  if (toolbar) {
+    toolbar.style.display = '';
+    var ovrEl = $('fcOvrCount');
+    if (ovrEl) ovrEl.textContent = ovrCount > 0 ? ovrCount + ' valor(es) personalizado(s)' : 'Nenhuma edição ainda';
+  }
+
   var colSpan = allMs.length + 2;
   var html = '<thead><tr><th style="min-width:160px">Categoria / Descri\xe7\xe3o</th>';
-  allMs.forEach(function(m){ html+='<th'+(fcSet[m]?' style="color:#bbb;font-style:italic"':'')+'>'+monthLabel(m)+(fcSet[m]?' *':'')+'</th>'; });
+  allMs.forEach(function(m){ html+='<th'+(fcSet[m]?' style="color:#bbb;font-style:italic"':'')+'>'+(fcSet[m]?'&#9997; ':'')+monthLabel(m)+'</th>'; });
   html += '<th>Total/M\xe9dia</th></tr></thead><tbody>';
 
   // hint row
-  html += '<tr class="hint-row"><td colspan="'+colSpan+'">▶ Clique numa categoria para ver descri\xe7\xf5es &bull; Clique numa descri\xe7\xe3o para ver os lan\xe7amentos individuais</td></tr>';
+  html += '<tr class="hint-row"><td colspan="'+colSpan+'">&#9654; Clique numa categoria para ver descri\xe7\xf5es &bull; &#9997; Clique em valores futuros (it\xe1lico) para editar a previs\xe3o</td></tr>';
 
   cats.forEach(function(cat, ci) {
     var catId = 'cat-'+ci;
@@ -1509,8 +1550,20 @@ function renderCatMonthTable(realRows) {
     html += '<tr class="cat-row" data-cat="'+catId+'">';
     html += '<td><span class="cat-arrow">&#9654;</span><strong>'+cat+'</strong></td>';
     allMs.forEach(function(m){
-      var v=fcSet[m]?(fcAvg[cat]||0):(vmap[cat]&&vmap[cat][m]||0);
-      html+='<td class="'+(fcSet[m]?'fcast':'')+'">'+(v>0?brl(v):'—')+'</td>';
+      if (fcSet[m]) {
+        // Editable forecast cell
+        var override = fcGet('cat', cat, m);
+        var autoVal  = fcAvg[cat]||0;
+        var dispVal  = override !== undefined ? override : autoVal;
+        var isOvr    = override !== undefined;
+        html += '<td class="fcast fc-edit'+(isOvr?' overridden':'')+'" '+
+          'data-fc-level="cat" data-fc-name="'+cat.replace(/"/g,'&quot;')+'" data-fc-month="'+m+'" '+
+          'data-fc-auto="'+autoVal.toFixed(2)+'">'+
+          (dispVal>0?brl(dispVal):'—')+'</td>';
+      } else {
+        var v = vmap[cat]&&vmap[cat][m]||0;
+        html+='<td>'+(v>0?brl(v):'—')+'</td>';
+      }
     });
     html+='<td style="font-weight:600">'+(catAvg>0?brl(catAvg):'—')+'</td></tr>';
 
@@ -1546,8 +1599,19 @@ function renderCatMonthTable(realRows) {
               '<span class="desc-badge">'+descCnt+'×</span>'+
               '<span style="font-size:.63rem;color:#bbb;margin-left:6px">'+pctOfCat+' da cat.</span></td>';
       allMs.forEach(function(m){
-        var v = fcSet[m] ? 0 : (descMonthTot[m]||0);
-        html+='<td style="font-size:.73rem">'+(v>0?'<span style="color:#555">'+brl(v)+'</span>':'—')+'</td>';
+        if (fcSet[m]) {
+          var override = fcGet('desc', cat+'|'+desc, m);
+          var autoVal  = 0; // desc-level default = 0 (manual only)
+          var dispVal  = override !== undefined ? override : autoVal;
+          var isOvr    = override !== undefined;
+          html += '<td class="fcast fc-edit'+(isOvr?' overridden':'')+'" style="font-size:.73rem" '+
+            'data-fc-level="desc" data-fc-name="'+(cat+'|'+desc).replace(/"/g,'&quot;')+'" data-fc-month="'+m+'" '+
+            'data-fc-auto="0">'+
+            (dispVal>0?'<span style="color:#92400E">'+brl(dispVal)+'</span>':'<span style="color:#ddd;font-size:.65rem">+ adicionar</span>')+'</td>';
+        } else {
+          var v = descMonthTot[m]||0;
+          html+='<td style="font-size:.73rem">'+(v>0?'<span style="color:#555">'+brl(v)+'</span>':'—')+'</td>';
+        }
       });
       html+='<td style="font-size:.72rem;color:#888">'+brl(descAvg)+'</td></tr>';
 
@@ -1623,6 +1687,41 @@ function renderCatMonthTable(realRows) {
       row.classList.toggle('open', opening);
       tbl.querySelectorAll('.entry-row[data-parent="'+id+'"]').forEach(function(er){
         er.classList.toggle('vis', opening);
+      });
+    });
+  });
+
+  // ── Editable forecast cells ──
+  tbl.querySelectorAll('.fc-edit').forEach(function(cell){
+    cell.addEventListener('click', function(e){
+      e.stopPropagation();
+      if (cell.querySelector('.fc-inp')) return; // already editing
+      var level = cell.dataset.fcLevel;
+      var name  = cell.dataset.fcName;
+      var month = cell.dataset.fcMonth;
+      var auto  = parseFloat(cell.dataset.fcAuto)||0;
+      var cur   = fcGet(level, name, month);
+      var curVal= cur !== undefined ? cur : auto;
+
+      // Replace cell content with input
+      cell.innerHTML = '<div class="fc-input-wrap"><input class="fc-inp" type="number" min="0" step="10" value="'+(curVal>0?curVal.toFixed(2):'')+'"/></div>';
+      var inp = cell.querySelector('.fc-inp');
+      inp.focus(); inp.select();
+
+      function commit() {
+        var raw = parseFloat(inp.value);
+        if (!isNaN(raw) && raw >= 0) {
+          fcSet(level, name, month, raw);
+        } else if (inp.value === '' || inp.value === '0') {
+          fcSet(level, name, month, null); // reset to auto
+        }
+        // Re-render only the table (not full page)
+        renderCatMonthTable(filtGastos(true));
+      }
+      inp.addEventListener('blur', commit);
+      inp.addEventListener('keydown', function(ev){
+        if (ev.key==='Enter') { inp.blur(); }
+        if (ev.key==='Escape') { fcSet(level, name, month, null); renderCatMonthTable(filtGastos(true)); }
       });
     });
   });
