@@ -26,11 +26,12 @@ var HORIZONS = [
 ];
 
 /* ── State ── */
-var currentHz = 'decada';
-var editingId = null;
-var allGoals  = [];   // cache
-var allTasks  = [];   // daily tasks cache
-var todayChecks = {}; // {task_id: true/false}
+var currentHz    = 'decada';
+var editingId    = null;
+var allGoals     = [];
+var allTasks     = [];
+var todayChecks  = {};
+var personFilter = 'all';
 
 function todayKey(){ var n=new Date(); return n.getFullYear()+'-'+String(n.getMonth()+1).padStart(2,'0')+'-'+String(n.getDate()).padStart(2,'0'); }
 function uid()     { return Date.now().toString(36)+Math.random().toString(36).slice(2,6); }
@@ -101,11 +102,25 @@ function renderConnectionBar() {
   var annual= allGoals.filter(function(g){ return g.hz==='anual'; });
   var annDone=annual.filter(function(g){ return g.progress>=100; }).length;
 
+  var personKpis = '<div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid #f0f0f0;padding-top:10px;">'+
+    PERSONS.map(function(p){
+      var pg   = allGoals.filter(function(g){return (g.person||'ambos')===p.id;});
+      var pdone= pg.filter(function(g){return g.progress>=100;}).length;
+      var isSel= personFilter===p.id;
+      return '<div class="conn-card" onclick="setPersonFilter(\''+(isSel?'all':p.id)+'\')" style="cursor:pointer;border:2px solid '+(isSel?p.color:'#eaeaea')+';background:'+(isSel?p.bg:'#fff')+';transition:all .15s;">'+
+        '<div class="conn-dot" style="background:'+p.color+'"></div>'+
+        '<div><div class="conn-lbl" style="color:'+(isSel?p.color:'#bbb')+'">'+p.icon+' '+p.label+'</div>'+
+        '<div class="conn-val">'+pg.length+' meta'+(pg.length!==1?'s':'')+'</div>'+
+        '<div class="conn-sub">'+(pg.length-pdone)+' ativas · '+pdone+' concluídas</div></div></div>';
+    }).join('')+
+  '</div>';
+
   document.getElementById('connBar').innerHTML =
     conn('💰','Financeiro',fin.ganho>0?brl(fin.ganho)+'/mês':'—',fin.ganho>0?'Receita planejada':'Configure no módulo financeiro','#15803D')+
     conn('🎯','Metas Ativas',cur.length,'no horizonte atual','#1D4ED8')+
     conn('✅','Concluídas',done+' / '+cur.length,'horizonte atual','#9333EA')+
-    conn('📅','Metas Anuais',annual.length,annDone+' concluídas','#EA580C');
+    conn('📅','Metas Anuais',annual.length,annDone+' concluídas','#EA580C')+
+    personKpis;
 }
 function conn(icon,lbl,val,sub,color){
   return '<div class="conn-card"><div class="conn-dot" style="background:'+color+'"></div>'+
@@ -134,11 +149,16 @@ function renderCascade(){
 function renderGoalsPanel() {
   var hz    = hzInfo(currentHz);
   var goals = allGoals.filter(function(g){ return g.hz===currentHz; });
+  if(personFilter!=='all') goals=goals.filter(function(g){return (g.person||'ambos')===personFilter;});
+  var filterBadge = personFilter!=='all'
+    ? (function(){ var p=PERSONS.find(function(x){return x.id===personFilter;}); return p?
+        ' <span style="font-size:.7rem;padding:2px 8px;border-radius:9999px;background:'+p.bg+';color:'+p.color+';font-weight:700;vertical-align:middle">'+p.icon+' '+p.label+'</span>':''; })()
+    : '';
   var parentHzIdx = HORIZONS.findIndex(function(h){return h.id===currentHz;});
   var parentHz    = parentHzIdx>0?HORIZONS[parentHzIdx-1]:null;
 
   var header = '<div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">'+
-    '<div><div style="font-size:1rem;font-weight:700">'+hz.icon+' '+hz.title+'</div>'+
+    '<div><div style="font-size:1rem;font-weight:700">'+hz.icon+' '+hz.title+filterBadge+'</div>'+
     '<div style="font-size:.73rem;color:#aaa;margin-top:2px">'+hz.desc+'</div></div>'+
     '<button class="add-goal-btn" style="width:auto;padding:8px 16px" onclick="openModal(null)">+ Adicionar meta</button></div>';
 
@@ -449,8 +469,10 @@ window.markDone=markDone;
 window.toggleDaily=toggleDaily;
 window.quickProgress=quickProgress;
 window.pickPerson=pickPerson;
+window.setPersonFilter=setPersonFilter;
 
 function setHz(id){ currentHz=id; render(); }
+function setPersonFilter(id){ personFilter=(personFilter===id?'all':id); render(); }
 
 document.getElementById('modalBg').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
