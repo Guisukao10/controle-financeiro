@@ -127,16 +127,6 @@ function renderHoje(){
 
   html += '</div>';
 
-  /* ── Peso + Humor rápidos (sem Sono) ── */
-  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">';
-  html += doCard('📏','Peso',
-    dayMetrics&&dayMetrics.weight_kg ? dayMetrics.weight_kg+'kg' : null,
-    dayMetrics ? 'Medido hoje' : null, '#1D4ED8','metricas');
-  html += doCard('😊','Humor',
-    dayMood ? MOOD_EMOJI[dayMood.mood]+' '+ENERGY_EMOJI[dayMood.energy] : null,
-    dayMood ? 'Estresse: '+STRESS_LABELS[dayMood.stress] : null, '#15803D','humor');
-  html += '</div>';
-
   /* ── Metas de saúde ── */
   html += '<div style="background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;">';
   html += '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#E11D48;margin-bottom:12px">❤️ Metas de Saúde — check-in diário</div>';
