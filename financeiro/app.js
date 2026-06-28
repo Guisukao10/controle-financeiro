@@ -1248,7 +1248,7 @@ function renderClassifTab(rows) {
     }).join('<br>')+'</td>';
   });
   tbl+='<td></td><td></td></tr></tbody>';
-  $('classMtx').innerHTML = tbl;
+  if($('classMtx')) $('classMtx').innerHTML = tbl;
 
   // Category editor
   var cats = uniq(allGastos.map(function(r){ return r.cat; }).filter(Boolean));
