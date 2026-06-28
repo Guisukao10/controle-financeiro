@@ -174,23 +174,14 @@ function renderDay(){
     '</div>';
   });
 
-  /* Meta goals connection */
-  if(metaGoals.length){
-    html += '<div class="meta-conn">'+
-      '<div class="mc-title">🎯 Metas de Saúde conectadas</div>'+
-      metaGoals.slice(0,4).map(function(g){
-        return '<div class="mc-goal">'+
-          '<span class="mc-gname">'+esc(g.title)+'</span>'+
-          '<div class="mc-bar"><div class="mc-bar-fill" style="width:'+(g.progress||0)+'%"></div></div>'+
-          '<span class="mc-pct">'+(g.progress||0)+'%</span>'+
-          '<button onclick="quickProg(\''+g.id+'\')" style="padding:2px 7px;border:1px solid #FED7AA;border-radius:5px;background:#FFF7ED;font-size:.65rem;cursor:pointer;font-family:inherit;color:#EA580C;font-weight:600">+10%</button>'+
-        '</div>';
-      }).join('')+
-      '<a href="../metas/" style="font-size:.7rem;color:#EA580C;font-weight:600;text-decoration:none;display:block;margin-top:8px">Ver todas as metas de saúde →</a>'+
-    '</div>';
-  }
+  /* Metas vinculadas widget */
+  html += '<div style="background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;margin-bottom:14px">'+
+    '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#EA580C;margin-bottom:12px">🎯 Metas de Saúde — check-in diário</div>'+
+    '<div id="nutMetasWidget"></div>'+
+  '</div>';
 
   document.getElementById('dayPanel').innerHTML=html;
+  if(window.GoalsWidget) GoalsWidget.render('nutMetasWidget','sau');
 }
 
 function renderDateNav(){

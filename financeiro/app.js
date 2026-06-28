@@ -698,16 +698,22 @@ var statusEl = $('statusEl'), appEl = $('appEl'), btnR = $('btnR'), tsEl = $('ts
 var fMes = $('fMes'), fResp = $('fResp'), fTipo = $('fTipo'), fCat = $('fCat');
 
 /* ─── Tabs ─── */
+var TAB_PANELS = {
+  main:       ['panelMain'],
+  analise:    ['panelGastos','panelGanhos','panelCross'],
+  planejador: ['panelClassif','panelSimulacao'],
+  invest:     ['panelInvest'],
+  lancar:     ['panelLancar','panelTabela']
+};
+var ALL_PANELS = ['panelMain','panelGastos','panelGanhos','panelCross','panelClassif','panelPrevisao','panelInvest','panelSimulacao','panelLancar','panelTabela'];
+
 document.querySelectorAll('.tab').forEach(function(t) {
   t.addEventListener('click', function() {
     document.querySelectorAll('.tab').forEach(function(x){ x.classList.remove('on'); });
     t.classList.add('on');
     currentTab = t.dataset.t;
-    var panels = {main:'panelMain',gastos:'panelGastos',ganhos:'panelGanhos',cross:'panelCross',classif:'panelClassif',previsao:'panelPrevisao',invest:'panelInvest',simulacao:'panelSimulacao',lancar:'panelLancar',tabela:'panelTabela'};
-    Object.keys(panels).forEach(function(k){
-      var el = $(panels[k]);
-      if (el) el.style.display = (k === currentTab ? 'block' : 'none');
-    });
+    ALL_PANELS.forEach(function(id){ var el=$(id); if(el) el.style.display='none'; });
+    (TAB_PANELS[currentTab]||[]).forEach(function(id){ var el=$(id); if(el) el.style.display='block'; });
     setTimeout(renderCharts, 60);
   });
 });
@@ -1291,15 +1297,17 @@ function renderTable(rows, tot) {
 
 /* ─── Charts ─── */
 function renderCharts() {
-  if(currentTab==='main')    renderMainTab(filtGastos(true), filtGanhos(true));
+  if(currentTab==='main')       renderMainTab(filtGastos(true), filtGanhos(true));
+  else if(currentTab==='analise')    { renderChGastos(); renderChGanhos(); renderChCross(); }
+  else if(currentTab==='planejador') { renderChClassif(); renderSimTab(); }
+  else if(currentTab==='invest')     renderInvestTab(filtGastos(true));
+  else if(currentTab==='lancar')     { initLancarTab(); renderTable(filtGastos(), total(filtGastos())); }
+  // legacy fallbacks
   else if(currentTab==='gastos')  renderChGastos();
-  else if(currentTab==='ganhos') renderChGanhos();
-  else if(currentTab==='cross')  renderChCross();
-  else if(currentTab==='classif')  renderChClassif();
-  else if(currentTab==='previsao') renderForecastTab(filtGastos(true));
-  else if(currentTab==='invest')    renderInvestTab(filtGastos(true));
+  else if(currentTab==='ganhos')  renderChGanhos();
+  else if(currentTab==='cross')   renderChCross();
+  else if(currentTab==='classif') renderChClassif();
   else if(currentTab==='simulacao') renderSimTab();
-  else if(currentTab==='lancar')    initLancarTab();
 }
 
 function makeChart(id, cfg) {

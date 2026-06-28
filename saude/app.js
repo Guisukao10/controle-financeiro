@@ -127,24 +127,11 @@ function renderHoje(){
 
   html += '</div>';
 
-  /* Health goals */
-  if(healthGoals.length){
-    html += '<div class="health-goals">'+
-      '<div class="hg-title">❤️ Metas de Saúde</div>'+
-      healthGoals.slice(0,5).map(function(g){
-        return '<div class="hg-row">'+
-          '<span class="hg-name">'+esc(g.title)+(g.target?' <span style="font-size:.63rem;color:#aaa">'+esc(g.target)+'</span>':'')+'</span>'+
-          '<div class="hg-bar-wrap"><div class="hg-bar-fill" style="width:'+(g.progress||0)+'%"></div></div>'+
-          '<span class="hg-pct">'+(g.progress||0)+'%</span>'+
-          '<button class="hg-inc" onclick="incGoal(\''+g.id+'\')">+10%</button>'+
-        '</div>';
-      }).join('')+
-      '<a href="../metas/" style="font-size:.7rem;color:#E11D48;font-weight:600;text-decoration:none;display:block;margin-top:8px">Ver todas as metas de saúde →</a>'+
-    '</div>';
-  } else {
-    html += '<div style="background:#FFF1F2;border:1px solid #FECDD3;border-radius:10px;padding:14px;margin-bottom:14px;font-size:.78rem;color:#888">'+
-      '❤️ Crie metas com área <strong>Saúde</strong> no <a href="../metas/" style="color:#E11D48;font-weight:600">módulo Metas</a> para acompanhar aqui.</div>';
-  }
+  /* Health goals widget */
+  html += '<div style="background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;margin-bottom:14px">'+
+    '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#E11D48;margin-bottom:12px">❤️ Metas de Saúde — check-in diário</div>'+
+    '<div id="saudeMetasWidget"></div>'+
+  '</div>';
 
   /* Today summary */
   html += '<div class="section-panel">'+
@@ -154,6 +141,7 @@ function renderHoje(){
     '</div></div>';
 
   document.getElementById('mainPanel').innerHTML = html;
+  if(window.GoalsWidget) GoalsWidget.render('saudeMetasWidget','sau');
 }
 
 function doCard(icon,lbl,val,sub,color,section){

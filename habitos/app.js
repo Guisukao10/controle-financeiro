@@ -219,8 +219,13 @@ function renderManage(){
       '</div>'+
     '</div>';
   }).join('')+'</div>'+
-  '<button class="add-habit-btn" onclick="openModal(null)">+ Criar novo hábito</button>';
+  '<button class="add-habit-btn" onclick="openModal(null)">+ Criar novo hábito</button>'+
+  '<div style="background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;margin-top:14px">'+
+    '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#9333EA;margin-bottom:12px">🎯 Metas vinculadas — check-in diário</div>'+
+    '<div id="habMetasWidget"></div>'+
+  '</div>';
   document.getElementById('mainPanel').innerHTML=html;
+  if(window.GoalsWidget) GoalsWidget.render('habMetasWidget','sau');
 }
 
 function renderStats(){
