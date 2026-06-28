@@ -24,43 +24,64 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 .conn-val{font-size:.88rem;font-weight:700;color:#1a1a1a}
 .conn-sub{font-size:.63rem;color:#aaa;margin-top:1px}
 
-/* Goal cards grid */
-.goals-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:14px;margin-bottom:16px}
-.goal-card{background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;position:relative;transition:box-shadow .15s}
-.goal-card:hover{box-shadow:0 4px 16px rgba(0,0,0,.07)}
-.goal-card.done{opacity:.65}
-.gc-area{display:flex;align-items:center;gap:6px;margin-bottom:8px}
-.gc-area-dot{width:8px;height:8px;border-radius:50%}
-.gc-area-name{font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb}
-.gc-title{font-size:.92rem;font-weight:700;color:#1a1a1a;margin-bottom:5px;line-height:1.3}
-.gc-desc{font-size:.74rem;color:#888;line-height:1.5;margin-bottom:10px}
-.gc-progress{margin-bottom:10px}
-.gc-prog-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
-.gc-prog-pct{font-size:.72rem;font-weight:700;color:#555}
-.gc-prog-track{background:#f0f0f0;border-radius:5px;height:7px;overflow:hidden}
-.gc-prog-fill{height:100%;border-radius:5px;transition:width .5s}
-.gc-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-bottom:10px}
-.gc-tag{font-size:.62rem;font-weight:600;padding:2px 8px;border-radius:10px;background:#F3F4F6;color:#6B7280}
-.gc-tag.linked{background:#EFF6FF;color:#1D4ED8}
-.gc-date{font-size:.65rem;color:#bbb}
-.gc-actions{display:flex;gap:6px;justify-content:flex-end}
-.gc-btn{padding:5px 10px;border-radius:6px;border:1px solid #e5e7eb;background:#fff;font-family:inherit;font-size:.7rem;font-weight:600;cursor:pointer;color:#555;transition:all .15s}
-.gc-btn:hover{background:#f5f5f5}
-.gc-btn.done-btn{color:#15803D;border-color:#BBF7D0;background:#F0FDF4}
-.gc-btn.del-btn{color:#B91C1C;border-color:#FECACA}
-.gc-btn.del-btn:hover{background:#FEF2F2}
-.gc-linked-badge{font-size:.62rem;color:#1D4ED8;background:#EFF6FF;border-radius:6px;padding:2px 7px;display:inline-block;margin-top:4px}
+/* ── Goal rows (new layout) ── */
+.goals-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:16px}
 
-/* Goal status colors */
-.status-pending  .gc-prog-fill{background:#E5E7EB}
-.status-active   .gc-prog-fill{background:#1D4ED8}
-.status-close    .gc-prog-fill{background:#EF9F27}
-.status-done     .gc-prog-fill{background:#15803D}
-.status-overdue  .gc-prog-fill{background:#B91C1C}
+.goal-row{
+  background:#fff;border:1px solid #e5e7eb;border-left:4px solid #e5e7eb;
+  border-radius:12px;padding:16px 20px;
+  transition:box-shadow .18s,transform .18s;
+  position:relative;
+}
+.goal-row:hover{box-shadow:0 6px 24px rgba(0,0,0,.09);transform:translateX(3px)}
+.goal-row.done{border-left-color:#15803D!important;opacity:.72}
+.goal-row.active{border-left-color:#1D4ED8}
+.goal-row.close{border-left-color:#EF9F27}
+
+.gr-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px;flex-wrap:wrap;gap:6px}
+.gr-badges{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.gr-area{display:inline-flex;align-items:center;gap:5px;font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;padding:3px 9px;border-radius:9999px}
+.gr-area-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.gr-person{font-size:.62rem;font-weight:700;padding:3px 9px;border-radius:9999px}
+.gr-right{display:flex;align-items:center;gap:7px}
+.gr-mod-link{font-size:.72rem;font-weight:700;text-decoration:none;color:#374151;background:#f3f4f6;padding:4px 11px;border-radius:9999px;transition:all .15s;border:1px solid #e5e7eb;white-space:nowrap}
+.gr-mod-link:hover{background:#1a1a1a;color:#fff;border-color:#1a1a1a}
+.gr-done-badge{font-size:.65rem;font-weight:700;color:#15803D;background:#F0FDF4;padding:3px 9px;border-radius:9999px;border:1px solid #BBF7D0}
+
+.gr-title{font-size:1rem;font-weight:700;color:#111827;line-height:1.3;margin-bottom:3px}
+.gr-desc{font-size:.78rem;color:#4B5563;line-height:1.55;margin-bottom:6px}
+.gr-parent{font-size:.66rem;color:#1D4ED8;font-weight:600;margin-bottom:5px}
+
+.gr-progress{display:flex;align-items:center;gap:10px;margin:10px 0}
+.gr-prog-track{flex:1;height:9px;background:#E5E7EB;border-radius:9999px;overflow:hidden}
+.gr-prog-fill{height:100%;border-radius:9999px;transition:width .5s ease}
+.gr-prog-pct{font-size:.82rem;font-weight:800;min-width:40px;text-align:right}
+
+.gr-footer{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:6px}
+.gr-meta{display:flex;flex-wrap:wrap;gap:6px;align-items:center}
+.gr-date{font-size:.7rem;color:#6B7280;font-weight:500}
+.gr-tag{font-size:.66rem;font-weight:600;padding:2px 8px;border-radius:9999px;background:#F3F4F6;color:#374151}
+.gr-linked{background:#EFF6FF;color:#1D4ED8}
+
+.gc-actions{display:flex;gap:5px;flex-wrap:wrap}
+.gc-btn{padding:5px 12px;border-radius:7px;border:1px solid #D1D5DB;background:#F9FAFB;font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;color:#374151;transition:all .15s}
+.gc-btn:hover{background:#F3F4F6;border-color:#9CA3AF}
+.gc-btn.done-btn{color:#15803D;border-color:#86EFAC;background:#F0FDF4}
+.gc-btn.done-btn:hover{background:#DCFCE7}
+.gc-btn.del-btn{color:#B91C1C;border-color:#FCA5A5;background:#FFF1F2}
+.gc-btn.del-btn:hover{background:#FEE2E2}
 
 /* Add goal button */
-.add-goal-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border:2px dashed #E5E7EB;border-radius:12px;background:transparent;font-family:inherit;font-size:.82rem;font-weight:600;color:#bbb;cursor:pointer;transition:all .2s}
+.add-goal-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:14px;border:2px dashed #D1D5DB;border-radius:12px;background:transparent;font-family:inherit;font-size:.82rem;font-weight:600;color:#9CA3AF;cursor:pointer;transition:all .2s}
 .add-goal-btn:hover{border-color:#1D4ED8;color:#1D4ED8;background:#EFF6FF}
+
+/* Goal row count style */
+.goal-row-count .gr-tracker{display:flex;flex-direction:column;gap:7px;margin:10px 0}
+.goal-row-count .grt-row{background:#fafafa;border:1px solid #f0f0f0;border-radius:8px;padding:10px 12px}
+
+/* Celebrate overlay */
+@keyframes gr-pulse{0%,100%{opacity:1}50%{opacity:.5}}
+.gr-completing{animation:gr-pulse .4s ease 2}
 
 /* Modal */
 .modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px}

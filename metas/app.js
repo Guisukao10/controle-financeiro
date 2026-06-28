@@ -240,59 +240,124 @@ function goalCardCount(g) {
     '</div>';
   }).join('');
 
-  return '<div class="goal-card" id="gc-'+g.id+'">'+
-    '<div class="gc-area">'+
-      '<div class="gc-area-dot" style="background:'+area.color+'"></div>'+
-      '<span class="gc-area-name" style="color:'+area.color+'">'+area.label+'</span>'+
-      '<span style="margin-left:auto;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:9999px;background:'+personInfo.bg+';color:'+personInfo.color+'">'+personInfo.icon+' '+personInfo.label+'</span>'+
+  var mod = AREA_MODULES ? (AREA_MODULES[g.area]||null) : null;
+  return '<div class="goal-row goal-row-count" id="gc-'+g.id+'">'+
+    '<div class="gr-head">'+
+      '<div class="gr-badges">'+
+        '<span class="gr-area" style="background:'+area.bg+';color:'+area.color+'">'+
+          '<span class="gr-area-dot" style="background:'+area.color+'"></span>'+area.label+
+        '</span>'+
+        '<span class="gr-person" style="background:'+personInfo.bg+';color:'+personInfo.color+'">'+personInfo.icon+' '+personInfo.label+'</span>'+
+      '</div>'+
+      '<div class="gr-right">'+
+        (mod?'<a class="gr-mod-link" href="'+mod.url+'" title="Ir para '+mod.label+'">'+mod.icon+' '+mod.label+' →</a>':'')+
+      '</div>'+
     '</div>'+
-    '<div class="gc-title">'+esc(g.title)+'</div>'+
-    (g.description?'<div class="gc-desc">'+esc(g.description)+'</div>':'')+
-    rows+
-    (g.deadline?'<div class="gc-meta" style="margin-top:4px;"><span class="gc-date">📅 '+esc(g.deadline)+'</span></div>':'')+
-    '<div class="gc-actions" style="margin-top:10px;">'+
-      '<button class="gc-btn" onclick="openModal(\''+g.id+'\')">✏ Editar</button>'+
-      '<button class="gc-btn del-btn" onclick="deleteGoal(\''+g.id+'\')">🗑</button>'+
+    '<div class="gr-title">'+esc(g.title)+'</div>'+
+    (g.description?'<div class="gr-desc">'+esc(g.description)+'</div>':'')+
+    '<div class="goal-row-count gr-tracker">'+rows+'</div>'+
+    '<div class="gr-footer" style="margin-top:8px;">'+
+      '<div class="gr-meta">'+(g.deadline?'<span class="gr-date">📅 '+esc(g.deadline)+'</span>':'')+'</div>'+
+      '<div class="gc-actions">'+
+        '<button class="gc-btn" onclick="openModal(\''+g.id+'\')">✏ Editar</button>'+
+        '<button class="gc-btn del-btn" onclick="deleteGoal(\''+g.id+'\')">🗑</button>'+
+      '</div>'+
     '</div>'+
   '</div>';
 }
 
-function goalCard(g) {
-  if (g.target_count > 0) return goalCardCount(g);
-  var area  = areaInfo(g.area||'pes');
-  var pct   = Math.min(g.progress||0,100);
-  var done  = pct>=100;
-  var parent= g.parent_id ? allGoals.find(function(x){return x.id===g.parent_id;}) : null;
-  var children=allGoals.filter(function(x){return x.parent_id===g.id;});
-  var statusCls = done?'status-done':pct>=80?'status-close':pct>0?'status-active':'status-pending';
+/* ── Module links per area ── */
+var AREA_MODULES = {
+  fin:{url:'../financeiro/',icon:'💰',label:'Financeiro'},
+  sau:{url:'../saude/',     icon:'❤️',label:'Saúde'},
+  hab:{url:'../habitos/',  icon:'✅',label:'Hábitos'},
+  nut:{url:'../nutricao/', icon:'🥗',label:'Nutrição'}
+};
 
-  var personInfo = PERSONS.find(function(p){return p.id===(g.person||'ambos');})||PERSONS[2];
-  return '<div class="goal-card '+statusCls+(done?' done':'')+'" id="gc-'+g.id+'">'+
-    '<div class="gc-area">'+
-      '<div class="gc-area-dot" style="background:'+area.color+'"></div>'+
-      '<span class="gc-area-name" style="color:'+area.color+'">'+area.label+'</span>'+
-      '<span style="margin-left:auto;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:9999px;background:'+personInfo.bg+';color:'+personInfo.color+'">'+personInfo.icon+' '+personInfo.label+'</span>'+
-      (done?'<span style="font-size:.65rem;font-weight:700;color:#15803D;margin-left:6px">✓ Concluída</span>':'')+
+function goalCard(g) {
+  if(g.target_count>0) return goalCardCount(g);
+  var area   = areaInfo(g.area||'pes');
+  var pi     = PERSONS.find(function(p){return p.id===(g.person||'ambos');})||PERSONS[2];
+  var pct    = Math.min(g.progress||0,100);
+  var done   = pct>=100;
+  var parent = g.parent_id?allGoals.find(function(x){return x.id===g.parent_id;}):null;
+  var children=allGoals.filter(function(x){return x.parent_id===g.id;});
+  var mod    = AREA_MODULES[g.area]||null;
+  var statusCls = done?'done':pct>=80?'close':pct>0?'active':'pending';
+  var progColor = done?'#15803D':pct>=70?'#EF9F27':'#1D4ED8';
+
+  return '<div class="goal-row '+statusCls+'" id="gc-'+g.id+'">'+
+    '<div class="gr-head">'+
+      '<div class="gr-badges">'+
+        '<span class="gr-area" style="background:'+area.bg+';color:'+area.color+'">'+
+          '<span class="gr-area-dot" style="background:'+area.color+'"></span>'+area.label+
+        '</span>'+
+        '<span class="gr-person" style="background:'+pi.bg+';color:'+pi.color+'">'+pi.icon+' '+pi.label+'</span>'+
+      '</div>'+
+      '<div class="gr-right">'+
+        (mod?'<a class="gr-mod-link" href="'+mod.url+'" title="Ir para '+mod.label+'">'+mod.icon+' '+mod.label+' →</a>':'')+
+        (done?'<span class="gr-done-badge">✓ Concluída</span>':'')+
+      '</div>'+
     '</div>'+
-    '<div class="gc-title">'+esc(g.title)+'</div>'+
-    (g.description?'<div class="gc-desc">'+esc(g.description)+'</div>':'')+
-    '<div class="gc-progress">'+
-      '<div class="gc-prog-header"><span style="font-size:.7rem;color:#888">Progresso</span>'+
-      '<span class="gc-prog-pct" style="color:'+area.color+'">'+pct+'%</span></div>'+
-      '<div class="gc-prog-track"><div class="gc-prog-fill" style="width:'+pct+'%;background:'+area.color+'"></div></div>'+
+    '<div class="gr-title">'+esc(g.title)+'</div>'+
+    (g.description?'<div class="gr-desc">'+esc(g.description)+'</div>':'')+
+    (parent?'<div class="gr-parent">↗ '+esc(parent.title)+'</div>':'')+
+    '<div class="gr-progress">'+
+      '<div class="gr-prog-track"><div class="gr-prog-fill" style="width:'+pct+'%;background:'+progColor+'"></div></div>'+
+      '<span class="gr-prog-pct" style="color:'+progColor+'">'+pct+'%</span>'+
     '</div>'+
-    '<div class="gc-meta">'+
-      (g.target?'<span class="gc-tag">🎯 '+esc(g.target)+'</span>':'')+
-      (g.deadline?'<span class="gc-date">📅 '+esc(g.deadline)+'</span>':'')+
-      (children.length?'<span class="gc-tag linked">'+children.length+' sub-meta'+(children.length>1?'s':'')+'</span>':'')+
-    '</div>'+
-    (parent?'<div class="gc-linked-badge">↗ '+esc(parent.title)+'</div>':'')+
-    '<div class="gc-actions">'+
-      '<button class="gc-btn" onclick="openModal(\''+g.id+'\')">✏ Editar</button>'+
-      (pct<100?'<button class="gc-btn done-btn" onclick="markDone(\''+g.id+'\')">✓ Concluir</button>':'')+
-      '<button class="gc-btn del-btn" onclick="deleteGoal(\''+g.id+'\')">🗑</button>'+
+    '<div class="gr-footer">'+
+      '<div class="gr-meta">'+
+        (g.deadline?'<span class="gr-date">📅 '+esc(g.deadline)+'</span>':'')+
+        (g.target?'<span class="gr-tag">🎯 '+esc(g.target)+'</span>':'')+
+        (children.length?'<span class="gr-tag gr-linked">'+children.length+' sub-meta'+(children.length>1?'s':'')+'</span>':'')+
+      '</div>'+
+      '<div class="gc-actions">'+
+        (!done?'<button class="gc-btn done-btn" onclick="markDone(\''+g.id+'\')">✓ Concluir</button>':'')+
+        (pct<100&&pct>0?'<button class="gc-btn" onclick="quickProgress(\''+g.id+'\')">+10%</button>':'')+
+        '<button class="gc-btn" onclick="openModal(\''+g.id+'\')">✏ Editar</button>'+
+        '<button class="gc-btn del-btn" onclick="deleteGoal(\''+g.id+'\')">🗑</button>'+
+      '</div>'+
     '</div>'+
   '</div>';
+}
+
+/* ── Celebration animation ── */
+function celebrate(areaId) {
+  var EMOJIS={
+    fin:['💰','💵','🤑','💸','💎','✨'],
+    sau:['❤️','💪','🔥','🏋️','⚡','🏆'],
+    apr:['📚','🎓','💡','⭐','🧠','✨'],
+    rel:['❤️','🥰','💑','✨','🌹','💕'],
+    pes:['⭐','🌟','🎯','✨','🏆','🎉'],
+    pro:['🎉','🚀','✅','💻','🏆','⚡']
+  };
+  var items=EMOJIS[areaId]||['🎉','⭐','✅','✨','🏆'];
+  var overlay=document.createElement('div');
+  overlay.style.cssText='position:fixed;inset:0;pointer-events:none;z-index:9999;';
+  document.body.appendChild(overlay);
+  for(var i=0;i<45;i++){
+    (function(){
+      var el=document.createElement('div');
+      el.textContent=items[Math.floor(Math.random()*items.length)];
+      var sx=window.innerWidth*(0.05+Math.random()*0.9);
+      var sy=window.innerHeight*0.65;
+      var vx=(Math.random()-0.5)*9, vy=-(7+Math.random()*11);
+      var size=1.3+Math.random()*1.6, rot=0, rotS=(Math.random()-0.5)*14;
+      var op=1, g=0.38, px=sx, py=sy;
+      el.style.cssText='position:absolute;font-size:'+size+'rem;left:'+px+'px;top:'+py+'px;user-select:none;will-change:transform,opacity;';
+      overlay.appendChild(el);
+      setTimeout(function(){
+        (function tick(){
+          vy+=g; px+=vx; py+=vy; rot+=rotS; op-=0.011;
+          el.style.transform='translate('+(px-sx)+'px,'+(py-sy)+'px) rotate('+rot+'deg)';
+          el.style.opacity=Math.max(0,op);
+          if(op>0) requestAnimationFrame(tick); else el.remove();
+        })();
+      },Math.random()*700);
+    })();
+  }
+  setTimeout(function(){if(overlay.parentNode)overlay.remove();},5000);
 }
 
 /* ── Daily panel ── */
@@ -536,7 +601,7 @@ function deleteTask(id){
 function markDone(id){
   db.from('goals').eq('id',id).update({progress:100}).then(function(){
     var g=allGoals.find(function(x){return x.id===id;});
-    if(g) g.progress=100;
+    if(g){ g.progress=100; celebrate(g.area||'pes'); }
     render();
   }).catch(function(e){alert('Erro: '+e.message);});
 }
