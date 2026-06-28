@@ -102,25 +102,33 @@ function renderConnectionBar() {
   var annual= allGoals.filter(function(g){ return g.hz==='anual'; });
   var annDone=annual.filter(function(g){ return g.progress>=100; }).length;
 
-  var personKpis = '<div style="grid-column:1/-1;display:grid;grid-template-columns:repeat(3,1fr);gap:10px;border-top:1px solid #f0f0f0;padding-top:10px;">'+
-    PERSONS.map(function(p){
-      var pg   = allGoals.filter(function(g){return (g.person||'ambos')===p.id;});
-      var pdone= pg.filter(function(g){return g.progress>=100;}).length;
-      var isSel= personFilter===p.id;
-      return '<div class="conn-card" onclick="setPersonFilter(\''+(isSel?'all':p.id)+'\')" style="cursor:pointer;border:2px solid '+(isSel?p.color:'#eaeaea')+';background:'+(isSel?p.bg:'#fff')+';transition:all .15s;">'+
-        '<div class="conn-dot" style="background:'+p.color+'"></div>'+
-        '<div><div class="conn-lbl" style="color:'+(isSel?p.color:'#bbb')+'">'+p.icon+' '+p.label+'</div>'+
-        '<div class="conn-val">'+pg.length+' meta'+(pg.length!==1?'s':'')+'</div>'+
-        '<div class="conn-sub">'+(pg.length-pdone)+' ativas · '+pdone+' concluídas</div></div></div>';
-    }).join('')+
-  '</div>';
-
   document.getElementById('connBar').innerHTML =
     conn('💰','Financeiro',fin.ganho>0?brl(fin.ganho)+'/mês':'—',fin.ganho>0?'Receita planejada':'Configure no módulo financeiro','#15803D')+
     conn('🎯','Metas Ativas',cur.length,'no horizonte atual','#1D4ED8')+
     conn('✅','Concluídas',done+' / '+cur.length,'horizonte atual','#9333EA')+
-    conn('📅','Metas Anuais',annual.length,annDone+' concluídas','#EA580C')+
-    personKpis;
+    conn('📅','Metas Anuais',annual.length,annDone+' concluídas','#EA580C');
+
+  document.getElementById('personBar').innerHTML =
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:18px;">'+
+    PERSONS.map(function(p){
+      var pg   = allGoals.filter(function(g){return (g.person||'ambos')===p.id;});
+      var pdone= pg.filter(function(g){return g.progress>=100;}).length;
+      var isSel= personFilter===p.id;
+      return '<div class="conn-card" onclick="setPersonFilter(\''+p.id+'\')" style="cursor:pointer;'+
+        'border:2px solid '+(isSel?p.color:'#eaeaea')+';'+
+        'background:'+(isSel?p.bg:'#fff')+';'+
+        'transition:all .15s;'+
+        'box-shadow:'+(isSel?'0 2px 8px rgba(0,0,0,.08)':'none')+';'+
+        'transform:'+(isSel?'translateY(-1px)':'none')+';">'+
+        '<div style="width:10px;height:10px;border-radius:50%;background:'+p.color+';flex-shrink:0"></div>'+
+        '<div>'+
+          '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:'+(isSel?p.color:'#bbb')+';margin-bottom:2px">'+p.icon+' '+p.label+'</div>'+
+          '<div style="font-size:1rem;font-weight:800;color:#1a1a1a">'+pg.length+' <span style="font-size:.72rem;font-weight:600;color:#aaa">meta'+(pg.length!==1?'s':'')+'</span></div>'+
+          '<div style="font-size:.63rem;color:#aaa;margin-top:1px">'+(pg.length-pdone)+' ativas · '+pdone+' concluídas</div>'+
+        '</div>'+
+      '</div>';
+    }).join('')+
+    '</div>';
 }
 function conn(icon,lbl,val,sub,color){
   return '<div class="conn-card"><div class="conn-dot" style="background:'+color+'"></div>'+
