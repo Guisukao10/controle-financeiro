@@ -469,20 +469,26 @@ function renderMainTab(gRows, ganhoRows) {
 }
 
 /* ─── Invest Tab ─── */
-function calcInvest(aporte, taxaMes, anos, patrimonioInicial) {
-  var meses = anos * 12;
+function calcInvest(aporte, taxaMes, totalMeses, patrimonioInicial) {
   var r = taxaMes / 100;
   var pv = patrimonioInicial || 0;
   var rows = [];
   var patrimonio = pv;
-  for (var t = 1; t <= meses; t++) {
+  var anosCheios = Math.floor(totalMeses / 12);
+  var mesesRest  = totalMeses % 12;
+  for (var t = 1; t <= totalMeses; t++) {
     patrimonio = patrimonio * (1 + r) + aporte;
     if (t % 12 === 0) {
       var ano = t / 12;
-      var totalAportado = aporte * t;           // only new contributions
-      var jurosTotal = patrimonio - pv - totalAportado; // interest on everything
-      rows.push({ ano: ano, patrimonio: patrimonio, totalInvestido: totalAportado, juros: jurosTotal, patrimonioInicial: pv });
+      var totalAportado = aporte * t;
+      var jurosTotal = patrimonio - pv - totalAportado;
+      rows.push({ ano: ano, isPartial: false, mesesExtra: 0, patrimonio: patrimonio, totalInvestido: totalAportado, juros: jurosTotal });
     }
+  }
+  if (mesesRest > 0 && totalMeses > 0) {
+    var totalAportado = aporte * totalMeses;
+    var jurosTotal = patrimonio - pv - totalAportado;
+    rows.push({ ano: anosCheios, isPartial: true, mesesExtra: mesesRest, patrimonio: patrimonio, totalInvestido: totalAportado, juros: jurosTotal });
   }
   return rows;
 }
@@ -514,9 +520,14 @@ function renderInvestTab(gastoRows) {
 
   // Set slider defaults from real data (only on first render)
   if (!slAp.dataset.init) {
-    slAp.value = Math.min(Math.max(mediaInvest, 100), 5000);
+    var initAporte = Math.min(Math.max(mediaInvest, 0), 10000);
+    slAp.value = initAporte;
     slTx.value = 0.9;
-    slAn.value = 10;
+    slAn.value = 120; // 10 anos em meses
+    var inAp = document.getElementById('inAporte'); if(inAp) inAp.value = initAporte;
+    var inTx = document.getElementById('inTaxa');   if(inTx) inTx.value = '0.90';
+    var inAn = document.getElementById('inAnos');   if(inAn) inAn.value = '10';
+    var inMs = document.getElementById('inMeses');  if(inMs) inMs.value = '0';
     slAp.dataset.init = '1';
 
     // Auto-fill patrimônio guardado from sheet
@@ -556,20 +567,28 @@ function renderInvestTab(gastoRows) {
   updatePatVis();
 
   function refresh() {
-    var aporte = parseFloat(slAp.value);
-    var taxa   = parseFloat(slTx.value);
-    var anos   = parseInt(slAn.value, 10);
-    var pv     = getPatTotal();
+    var aporte     = parseFloat(document.getElementById('inAporte').value) || 0;
+    var taxa       = parseFloat(document.getElementById('inTaxa').value)   || 0.9;
+    var anosVal    = parseInt(document.getElementById('inAnos').value)      || 0;
+    var mesesVal   = parseInt(document.getElementById('inMeses').value)     || 0;
+    var totalMeses = anosVal * 12 + mesesVal;
+    if (totalMeses < 1) totalMeses = 1;
+    var pv = getPatTotal();
 
-    document.getElementById('svAporte').textContent = brl(aporte);
-    document.getElementById('svTaxa').textContent   = taxa.toFixed(2).replace('.', ',') + '%';
-    document.getElementById('svAnos').textContent   = anos + ' ano' + (anos > 1 ? 's' : '');
+    // sync sliders silently
+    if (slAp) slAp.value = aporte;
+    if (slTx) slTx.value = taxa;
+    if (slAn) slAn.value = totalMeses;
 
-    var rows10 = calcInvest(aporte, taxa, anos, pv);
+    var horizLabel = anosVal > 0
+      ? anosVal + ' ano' + (anosVal > 1 ? 's' : '') + (mesesVal > 0 ? ' e ' + mesesVal + ' mês' + (mesesVal > 1 ? 'es' : '') : '')
+      : mesesVal + ' mês' + (mesesVal > 1 ? 'es' : '');
+
+    var rows10 = calcInvest(aporte, taxa, totalMeses, pv);
     if (!rows10.length) return;
     var final = rows10[rows10.length - 1];
     var taxaAnual = (Math.pow(1 + taxa/100, 12) - 1) * 100;
-    var totalCapital = pv + final.totalInvestido; // initial + new contributions
+    var totalCapital = pv + final.totalInvestido;
 
     // KPI cards
     var pvCard = pv > 0
@@ -579,26 +598,27 @@ function renderInvestTab(gastoRows) {
       '<div class="inv-card"><div class="cl">Aporte Mensal</div><div class="cv">'+brl(aporte)+'</div><div class="cs">Histórico: '+brl(mediaInvest)+'/mês</div></div>'+
       '<div class="inv-card"><div class="cl">Taxa Anual Equiv.</div><div class="cv">'+taxaAnual.toFixed(2).replace('.',',')+'% a.a.</div><div class="cs">'+taxa.toFixed(2).replace('.',',')+'% a.m.</div></div>'+
       pvCard+
-      '<div class="inv-card hi"><div class="cl">Patrimônio em '+anos+' ano'+(anos>1?'s':'')+'</div><div class="cv">'+brl(final.patrimonio)+'</div><div class="cs">'+brl(totalCapital)+' aportados</div></div>'+
+      '<div class="inv-card hi"><div class="cl">Patrimônio em '+horizLabel+'</div><div class="cv">'+brl(final.patrimonio)+'</div><div class="cs">'+brl(totalCapital)+' aportados</div></div>'+
       '<div class="inv-card hi"><div class="cl">Juros Acumulados</div><div class="cv">'+brl(final.juros)+'</div><div class="cs">'+pct(final.juros/final.patrimonio*100,1)+' do patrimônio</div></div>'+
       '<div class="inv-card"><div class="cl">Multiplicador</div><div class="cv">'+(final.patrimonio/Math.max(totalCapital,1)).toFixed(2).replace('.',',')+'x</div><div class="cs">Retorno sobre capital total</div></div>';
 
     // Year table
+    var curYear = new Date().getFullYear();
     var tbl = '<thead><tr>'+
-      '<th>Ano</th>'+(pv>0?'<th>Pat. Inicial</th>':'')+
-      '<th>Aportes Acum.</th><th>Juros Acum.</th><th>Patrimônio</th><th>Rendim. Anual</th><th>% Juros</th>'+
+      '<th>Período</th>'+(pv>0?'<th>Pat. Inicial</th>':'')+
+      '<th>Aportes Acum.</th><th>Juros Acum.</th><th>Patrimônio</th><th>% Juros</th>'+
       '</tr></thead><tbody>';
     rows10.forEach(function(r, i) {
-      var prevPat = i > 0 ? rows10[i-1].patrimonio : pv;
-      var rendAnual = r.patrimonio - prevPat - aporte * 12;
-      var cls = r.ano % 2 === 0 ? ' yr-hi' : '';
-      tbl += '<tr class="'+cls+'">'+
-        '<td>Ano '+r.ano+' ('+(new Date().getFullYear()+r.ano)+')</td>'+
+      var cls = (r.ano % 2 === 0 && !r.isPartial) ? ' yr-hi' : (r.isPartial ? ' yr-hi' : '');
+      var periodoLabel = r.isPartial
+        ? r.ano + ' anos e ' + r.mesesExtra + ' mês' + (r.mesesExtra > 1 ? 'es' : '') + ' (' + (curYear + r.ano) + ')'
+        : 'Ano ' + r.ano + ' (' + (curYear + r.ano) + ')';
+      tbl += '<tr class="'+cls+'" '+(r.isPartial?'style="font-style:italic"':'')+'>'+
+        '<td>'+periodoLabel+'</td>'+
         (pv>0?'<td style="color:#15803D">'+brl(pv)+'</td>':'')+
         '<td>'+brl(r.totalInvestido)+'</td>'+
         '<td style="color:#15803D">'+brl(r.juros)+'</td>'+
         '<td style="font-weight:700">'+brl(r.patrimonio)+'</td>'+
-        '<td style="color:#15803D">'+brl(Math.max(rendAnual,0))+'</td>'+
         '<td>'+pct(r.juros/r.patrimonio*100,1)+'</td>'+
         '</tr>';
     });
@@ -607,15 +627,15 @@ function renderInvestTab(gastoRows) {
 
     // Note
     document.getElementById('invNote').innerHTML =
-      '&#128161; Juros compostos: '+brl(aporte)+'/mês a '+taxa.toFixed(2).replace('.',',')+'% a.m. ('+taxaAnual.toFixed(2).replace('.',',')+'% a.a.) por '+anos+' ano'+(anos>1?'s':'')+
-      (pv>0?' &bull; Patrimônio inicial de <strong>'+brl(pv)+'</strong> ('+brl(parseFloat(patGEl.value)||0)+' + '+brl(parseFloat(patGiEl.value)||0)+') incluído na simulação.':'')+
+      '&#128161; Juros compostos: '+brl(aporte)+'/mês a '+taxa.toFixed(2).replace('.',',')+'% a.m. ('+taxaAnual.toFixed(2).replace('.',',')+'% a.a.) por '+horizLabel+
+      (pv>0?' &bull; Patrimônio inicial de <strong>'+brl(pv)+'</strong> incluído na simulação.':'')+
       ' &bull; Média histórica aportada: <strong>'+brl(mediaInvest)+'/mês</strong>.';
 
     // Chart
     if (currentTab === 'invest') {
       var allMonths = [], patData = [], invData = [], jurData = [];
       var r2 = pv;
-      for (var t = 1; t <= anos * 12; t++) {
+      for (var t = 1; t <= totalMeses; t++) {
         r2 = r2 * (1 + taxa/100) + aporte;
         if (t % 3 === 0 || t === 1) {
           var lbl = 'Mês ' + t;
@@ -643,6 +663,7 @@ function renderInvestTab(gastoRows) {
   }
 
   slAp.oninput = slTx.oninput = slAn.oninput = refresh;
+  window._invRefresh = refresh;
   refresh();
 }
 
@@ -692,6 +713,12 @@ function parseSheet(text) {
 /* ─── State ─── */
 var allGastos = [], allGanhos = [], guardadoData = {}, classifMap = {}, chartMap = {};
 var currentTab = 'main';
+
+window.invRefresh = function(){ if(window._invRefresh) window._invRefresh(); };
+window.invSyncSlider = function(){
+  var an=document.getElementById('inAnos'), ms=document.getElementById('inMeses'), sl=document.getElementById('slAnos');
+  if(an&&ms&&sl){ sl.value=Math.max(1,(parseInt(an.value)||0)*12+(parseInt(ms.value)||0)); }
+};
 
 /* ─── DOM ─── */
 var statusEl = $('statusEl'), appEl = $('appEl'), btnR = $('btnR'), tsEl = $('ts');

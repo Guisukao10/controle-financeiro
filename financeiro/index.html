@@ -203,16 +203,50 @@
       <p class="pat-note" id="patNote" style="display:none">&#128161; Valores carregados automaticamente da aba <strong>Dinheiro Guardado</strong>. Edite se quiser simular outro cen&aacute;rio. O saldo inicial rende junto com os aportes mensais.</p>
     </div>
 
-    <div class="inv-slider">
-      <label>Aporte mensal</label>
-      <input type="range" id="slAporte" min="100" max="5000" step="50" value="500"/>
-      <span class="sv" id="svAporte">R$&nbsp;500</span>
-      <label style="margin-left:12px">Rendimento/mês</label>
-      <input type="range" id="slTaxa" min="0.3" max="2.0" step="0.05" value="0.9"/>
-      <span class="sv" id="svTaxa">0,90%</span>
-      <label style="margin-left:12px">Horizonte</label>
-      <input type="range" id="slAnos" min="1" max="10" step="1" value="10"/>
-      <span class="sv" id="svAnos">10 anos</span>
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;margin-bottom:16px;">
+      <!-- Aporte -->
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;display:block;margin-bottom:7px;">Aporte Mensal</label>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;">
+          <span style="font-size:.78rem;color:#888;">R$</span>
+          <input type="number" id="inAporte" min="0" step="50" value="500"
+            style="flex:1;padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.92rem;font-weight:700;outline:none;"
+            oninput="document.getElementById('slAporte').value=this.value;invRefresh()"/>
+        </div>
+        <input type="range" id="slAporte" min="0" max="10000" step="50" value="500" style="width:100%;"
+          oninput="document.getElementById('inAporte').value=this.value;invRefresh()"/>
+        <span style="display:none" id="svAporte"></span>
+      </div>
+      <!-- Taxa -->
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;display:block;margin-bottom:7px;">Rendimento / Mês</label>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;">
+          <input type="number" id="inTaxa" min="0.01" max="5.0" step="0.05" value="0.90"
+            style="flex:1;padding:7px 8px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.92rem;font-weight:700;outline:none;"
+            oninput="document.getElementById('slTaxa').value=this.value;invRefresh()"/>
+          <span style="font-size:.78rem;color:#888;">% a.m.</span>
+        </div>
+        <input type="range" id="slTaxa" min="0.01" max="3.0" step="0.05" value="0.9" style="width:100%;"
+          oninput="document.getElementById('inTaxa').value=parseFloat(this.value).toFixed(2);invRefresh()"/>
+        <span style="display:none" id="svTaxa"></span>
+      </div>
+      <!-- Horizonte -->
+      <div>
+        <label style="font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#888;display:block;margin-bottom:7px;">Horizonte</label>
+        <div style="display:flex;align-items:center;gap:5px;margin-bottom:7px;">
+          <input type="number" id="inAnos" min="0" max="50" step="1" value="10"
+            style="width:52px;padding:7px 6px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.92rem;font-weight:700;outline:none;text-align:center;"
+            oninput="invSyncSlider();invRefresh()"/>
+          <span style="font-size:.78rem;color:#888;">anos</span>
+          <input type="number" id="inMeses" min="0" max="11" step="1" value="0"
+            style="width:42px;padding:7px 6px;border:1.5px solid #e5e7eb;border-radius:7px;font-family:inherit;font-size:.92rem;font-weight:700;outline:none;text-align:center;"
+            oninput="invSyncSlider();invRefresh()"/>
+          <span style="font-size:.78rem;color:#888;">meses</span>
+        </div>
+        <input type="range" id="slAnos" min="1" max="120" step="1" value="120" style="width:100%;"
+          oninput="var t=parseInt(this.value);document.getElementById('inAnos').value=Math.floor(t/12);document.getElementById('inMeses').value=t%12;invRefresh()"/>
+        <span style="display:none" id="svAnos"></span>
+      </div>
     </div>
     <div class="inv-kpis" id="invKpis"></div>
     <div class="box">
