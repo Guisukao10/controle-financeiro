@@ -154,6 +154,7 @@ function saveQuickWorkout(personKey){
     notes:desc,created_at:new Date().toISOString()};
   db.from('workouts').insert(data).then(function(res){
     dayWorkouts.push(Array.isArray(res)?res[0]:data);
+    if(window.GoalsWidget) GoalsWidget.celebrate('sau');
     renderSection();
   }).catch(function(e){alert('Erro: '+e.message);});
 }
