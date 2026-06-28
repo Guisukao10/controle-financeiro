@@ -42,16 +42,10 @@ function loadDay(){
   document.getElementById('mainPanel').innerHTML='<div class="loading">⏳ Carregando...</div>';
   Promise.all([
     db.from('workouts').eq('date',currentDate).order('created_at',{ascending:true}).select('*'),
-    db.from('sleep_logs').eq('date',currentDate).select('*'),
-    db.from('body_metrics').eq('date',currentDate).select('*'),
-    db.from('mood_logs').eq('date',currentDate).select('*'),
-    db.from('goals').eq('area','sau').select('id,title,progress,hz,target')
+    db.from('goals').eq('area','sau').select('id,title,progress,hz,target,target_count,person,deadline')
   ]).then(function(res){
     dayWorkouts = res[0]||[];
-    daySleep    = (res[1]||[])[0]||null;
-    dayMetrics  = (res[2]||[])[0]||null;
-    dayMood     = (res[3]||[])[0]||null;
-    healthGoals = (res[4]||[]).filter(function(g){return g.hz!=='diario';});
+    healthGoals = (res[1]||[]).filter(function(g){return g.hz!=='diario';});
     renderSection();
   }).catch(function(e){
     document.getElementById('mainPanel').innerHTML='<div class="loading" style="color:#B91C1C">⚠️ '+e.message+'</div>';
@@ -61,11 +55,8 @@ function loadDay(){
 /* ── Render tabs ── */
 function renderTabs(){
   var tabs=[
-    {id:'hoje',icon:'📋',lbl:'Hoje'},
-    {id:'treino',icon:'💪',lbl:'Treinos'},
-    {id:'sono',icon:'😴',lbl:'Sono'},
-    {id:'metricas',icon:'📏',lbl:'Métricas'},
-    {id:'humor',icon:'😊',lbl:'Humor'}
+    {id:'hoje',      icon:'💪', lbl:'Hoje'},
+    {id:'dashboard', icon:'📊', lbl:'Dashboard'}
   ];
   document.getElementById('secTabs').innerHTML=tabs.map(function(t){
     return '<button class="sec-tab'+(t.id===currentSection?' on':'')+'" onclick="setSection(\''+t.id+'\')">'+t.icon+' '+t.lbl+'</button>';
@@ -75,11 +66,8 @@ function renderTabs(){
 function setSection(s){ currentSection=s; renderTabs(); renderSection(); }
 
 function renderSection(){
-  if(currentSection==='hoje')     renderHoje();
-  else if(currentSection==='treino')   renderTreino();
-  else if(currentSection==='sono')     renderSono();
-  else if(currentSection==='metricas') renderMetricas();
-  else if(currentSection==='humor')    renderHumor();
+  if(currentSection==='hoje')           renderHoje();
+  else if(currentSection==='dashboard') renderDashboard();
 }
 
 /* ── Date nav ── */
@@ -546,10 +534,133 @@ function saveMood(){
     .catch(function(e){alert('Erro: '+e.message);document.querySelector('.btn-save').textContent='Salvar';});
 }
 
+/* ── DASHBOARD ── */
+function renderDashboard(){
+  var panel=document.getElementById('mainPanel');
+  panel.innerHTML='<div class="loading">⏳ Carregando treinos...</div>';
+
+  db.from('workouts').order('date',{ascending:false}).select('*').then(function(all){
+    var wks=all||[];
+    var guiWks=wks.filter(function(w){return (w.person||'gui')==='gui';});
+    var giuWks=wks.filter(function(w){return w.person==='giu';});
+
+    /* frequency by type */
+    var typeCounts={};
+    wks.forEach(function(w){
+      var t=(w.notes||'').trim()||'Treino';
+      var p=w.person||'gui';
+      if(!typeCounts[t]) typeCounts[t]={gui:0,giu:0};
+      typeCounts[t][p]=(typeCounts[t][p]||0)+1;
+    });
+    var types=Object.keys(typeCounts).sort(function(a,b){
+      return (typeCounts[b].gui+typeCounts[b].giu)-(typeCounts[a].gui+typeCounts[a].giu);
+    });
+    var maxTotal=types.length?Math.max.apply(null,types.map(function(t){return typeCounts[t].gui+typeCounts[t].giu;})):1;
+
+    /* this month */
+    var now=new Date(); var mKey=now.getFullYear()+'-'+pad(now.getMonth()+1);
+    var thisMonth=wks.filter(function(w){return w.date&&w.date.startsWith(mKey);});
+
+    var html='';
+
+    /* KPIs */
+    html+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px;">';
+    html+=sKpi('Este mês',thisMonth.length+'x','#1a1a1a');
+    html+=sKpi('👤 Gui',guiWks.length+'x total','#1D4ED8');
+    html+=sKpi('👤 Giu',giuWks.length+'x total','#9333EA');
+    html+='</div>';
+
+    /* frequency chart */
+    if(types.length){
+      html+='<div style="background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;margin-bottom:14px;">';
+      html+='<div style="font-size:.63rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#1a1a1a;margin-bottom:14px;">Por tipo de treino</div>';
+      types.forEach(function(type){
+        var gui=typeCounts[type].gui||0;
+        var giu=typeCounts[type].giu||0;
+        html+='<div style="margin-bottom:14px;">';
+        html+='<div style="display:flex;justify-content:space-between;align-items:baseline;margin-bottom:5px;">';
+        html+='<span style="font-size:.84rem;font-weight:700;color:#1a1a1a;">'+esc(type)+'</span>';
+        html+='<span style="font-size:.7rem;color:#bbb;">'+(gui+giu)+'x total</span>';
+        html+='</div>';
+        if(gui>0){
+          html+='<div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;">';
+          html+='<span style="font-size:.63rem;font-weight:700;color:#1D4ED8;width:22px;">Gui</span>';
+          html+='<div style="flex:1;background:#f0f0f0;height:8px;border-radius:9999px;overflow:hidden;"><div style="background:#1D4ED8;height:100%;width:'+Math.round(gui/maxTotal*100)+'%;border-radius:9999px;"></div></div>';
+          html+='<span style="font-size:.7rem;font-weight:800;color:#1D4ED8;min-width:24px;text-align:right;">'+gui+'x</span>';
+          html+='</div>';
+        }
+        if(giu>0){
+          html+='<div style="display:flex;align-items:center;gap:8px;">';
+          html+='<span style="font-size:.63rem;font-weight:700;color:#9333EA;width:22px;">Giu</span>';
+          html+='<div style="flex:1;background:#f0f0f0;height:8px;border-radius:9999px;overflow:hidden;"><div style="background:#9333EA;height:100%;width:'+Math.round(giu/maxTotal*100)+'%;border-radius:9999px;"></div></div>';
+          html+='<span style="font-size:.7rem;font-weight:800;color:#9333EA;min-width:24px;text-align:right;">'+giu+'x</span>';
+          html+='</div>';
+        }
+        html+='</div>';
+      });
+      html+='</div>';
+    }
+
+    /* history (editable) */
+    html+='<div style="background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;">';
+    html+='<div style="font-size:.63rem;font-weight:800;text-transform:uppercase;letter-spacing:.08em;color:#1a1a1a;margin-bottom:14px;">Histórico</div>';
+    if(!wks.length){
+      html+='<p style="color:#bbb;font-size:.78rem;text-align:center;padding:12px;">Nenhum treino registrado ainda.</p>';
+    } else {
+      html+=wks.slice(0,60).map(function(w){
+        var ps=w.person==='giu'?{c:'#9333EA',bg:'#FDF4FF',l:'Giu'}:{c:'#1D4ED8',bg:'#EFF6FF',l:'Gui'};
+        var dp=w.date?w.date.split('-'):[];
+        var ds=dp.length===3?dp[2]+'/'+dp[1]:w.date;
+        return '<div id="wkRow-'+w.id+'" style="display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid #f5f5f5;">'+
+          '<span style="font-size:.7rem;color:#bbb;min-width:38px;flex-shrink:0;">'+ds+'</span>'+
+          '<span style="font-size:.63rem;font-weight:700;color:'+ps.c+';background:'+ps.bg+';padding:2px 7px;border-radius:9999px;flex-shrink:0;">'+ps.l+'</span>'+
+          '<span id="wkTxt-'+w.id+'" style="font-size:.8rem;color:#333;flex:1;cursor:pointer;" ondblclick="startEditWorkout(\''+w.id+'\')">'+esc(w.notes||'Treino')+'</span>'+
+          '<button onclick="startEditWorkout(\''+w.id+'\')" style="background:none;border:none;cursor:pointer;color:#ccc;padding:2px 5px;font-size:.75rem;" title="Editar">✏</button>'+
+          '<button onclick="deleteWorkout(\''+w.id+'\')" style="background:none;border:none;cursor:pointer;color:#f0a0a0;padding:2px 5px;font-size:.75rem;" title="Remover">🗑</button>'+
+        '</div>';
+      }).join('');
+    }
+    html+='</div>';
+
+    panel.innerHTML=html;
+  }).catch(function(e){
+    panel.innerHTML='<div class="loading" style="color:#B91C1C">⚠️ '+e.message+'</div>';
+  });
+}
+
+function sKpi(label,value,color){
+  return '<div style="background:#fff;border:1px solid #eaeaea;border-radius:10px;padding:14px;text-align:center;">'+
+    '<div style="font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#bbb;margin-bottom:5px;">'+label+'</div>'+
+    '<div style="font-size:1.5rem;font-weight:800;color:'+color+';">'+value+'</div>'+
+  '</div>';
+}
+
+function startEditWorkout(id){
+  var el=document.getElementById('wkTxt-'+id);
+  if(!el||el.querySelector('input')) return;
+  var cur=el.textContent||'';
+  el.innerHTML='<input type="text" value="'+esc(cur)+'" id="wkEd-'+id+'" '+
+    'onkeydown="if(event.key===\'Enter\')confirmEditWorkout(\''+id+'\');if(event.key===\'Escape\')renderDashboard();" '+
+    'onblur="confirmEditWorkout(\''+id+'\')" '+
+    'style="width:100%;padding:3px 7px;border:1.5px solid #1D4ED8;border-radius:5px;font-family:inherit;font-size:.8rem;outline:none;"/>';
+  setTimeout(function(){var i=document.getElementById('wkEd-'+id);if(i){i.focus();i.select();}},30);
+}
+
+function confirmEditWorkout(id){
+  var input=document.getElementById('wkEd-'+id);
+  if(!input) return;
+  var newText=input.value.trim();
+  if(!newText){renderDashboard();return;}
+  db.from('workouts').eq('id',id).update({notes:newText}).then(function(){
+    renderDashboard();
+  }).catch(function(e){alert('Erro: '+e.message);});
+}
+
 function deleteWorkout(id){
   if(!confirm('Remover este treino?'))return;
   db.from('workouts').eq('id',id).delete().then(function(){
-    dayWorkouts=dayWorkouts.filter(function(w){return w.id!==id;}); renderSection();
+    dayWorkouts=dayWorkouts.filter(function(w){return w.id!==id;});
+    if(currentSection==='dashboard') renderDashboard(); else renderSection();
   }).catch(function(e){alert('Erro: '+e.message);});
 }
 
@@ -571,11 +682,10 @@ function goToday(){ currentDate=todayStr(); loadDay(); }
 /* ── Globals ── */
 window.setSection=setSection; window.changeDate=changeDate; window.goToday=goToday;
 window.openModal=openModal; window.closeModal=closeModal;
-window.saveWorkout=saveWorkout; window.saveSleep=saveSleep;
-window.saveMetrics=saveMetrics; window.saveMood=saveMood;
 window.deleteWorkout=deleteWorkout; window.incGoal=incGoal;
-window.pickWkType=pickWkType; window.setRating=setRating;
 window.showWkForm=showWkForm; window.saveQuickWorkout=saveQuickWorkout;
+window.renderDashboard=renderDashboard;
+window.startEditWorkout=startEditWorkout; window.confirmEditWorkout=confirmEditWorkout;
 
 document.getElementById('modalBg').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});
