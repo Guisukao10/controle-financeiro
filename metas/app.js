@@ -11,6 +11,12 @@ var AREAS = [
   { id:'pro', label:'Projetos',        color:'#0891B2', bg:'#F0FDFA' }
 ];
 
+var PERSONS = [
+  { id:'gui',   label:'Gui',   color:'#1D4ED8', bg:'#EFF6FF', icon:'👤' },
+  { id:'giu',   label:'Giu',   color:'#9333EA', bg:'#FDF4FF', icon:'👤' },
+  { id:'ambos', label:'Ambos', color:'#15803D', bg:'#F0FDF4', icon:'👥' }
+];
+
 var HORIZONS = [
   { id:'decada', icon:'🔭', label:'10 Anos',  title:'Visão de 10 Anos',   desc:'Onde você quer estar daqui a 10 anos?'  },
   { id:'anual',  icon:'📅', label:'Anual',    title:'Metas Anuais',       desc:'O que você vai conquistar este ano?'    },
@@ -156,11 +162,13 @@ function goalCard(g) {
   var children=allGoals.filter(function(x){return x.parent_id===g.id;});
   var statusCls = done?'status-done':pct>=80?'status-close':pct>0?'status-active':'status-pending';
 
+  var personInfo = PERSONS.find(function(p){return p.id===(g.person||'ambos');})||PERSONS[2];
   return '<div class="goal-card '+statusCls+(done?' done':'')+'" id="gc-'+g.id+'">'+
     '<div class="gc-area">'+
       '<div class="gc-area-dot" style="background:'+area.color+'"></div>'+
       '<span class="gc-area-name" style="color:'+area.color+'">'+area.label+'</span>'+
-      (done?'<span style="margin-left:auto;font-size:.65rem;font-weight:700;color:#15803D">✓ Concluída</span>':'')+
+      '<span style="margin-left:auto;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:9999px;background:'+personInfo.bg+';color:'+personInfo.color+'">'+personInfo.icon+' '+personInfo.label+'</span>'+
+      (done?'<span style="font-size:.65rem;font-weight:700;color:#15803D;margin-left:6px">✓ Concluída</span>':'')+
     '</div>'+
     '<div class="gc-title">'+esc(g.title)+'</div>'+
     (g.description?'<div class="gc-desc">'+esc(g.description)+'</div>':'')+
@@ -272,6 +280,18 @@ function openModal(id) {
         '</select></div>'+
         '<div class="mf-field"><label>Prazo</label><input id="mf-deadline" type="text" placeholder="Ex: Dez/2026" value="'+esc(g?g.deadline:'')+'"/></div>'+
       '</div>'+
+      '<div class="mf-field"><label>Meta de quem?</label>'+
+        '<div id="personPicker" style="display:flex;gap:8px;flex-wrap:wrap;">'+
+          PERSONS.map(function(p){
+            var sel=(g?g.person||'ambos':'ambos')===p.id;
+            return '<button type="button" id="pb-'+p.id+'" onclick="pickPerson(\''+p.id+'\')" style="'+
+              'flex:1;padding:8px 12px;border-radius:8px;border:2px solid '+(sel?p.color:'#e5e7eb')+';'+
+              'background:'+(sel?p.bg:'#fff')+';color:'+(sel?p.color:'#888')+';'+
+              'font-weight:'+(sel?'700':'500')+';font-size:.82rem;cursor:pointer;transition:all .15s;">'+
+              p.icon+' '+p.label+'</button>';
+          }).join('')+
+        '</div>'+
+      '</div>'+
       '<div class="mf-field"><label>Meta quantitativa</label><input id="mf-target" type="text" placeholder="Ex: R$ 50.000, 10kg, 12 livros" value="'+esc(g?g.target:'')+'"/></div>'+
       parentSelect+
       '<div class="mf-field"><label>Progresso: <span id="mf-pct-val" style="color:#1D4ED8;font-weight:700">'+(g?g.progress:0)+'%</span></label>'+
@@ -305,6 +325,22 @@ function openDailyModal() {
   document.getElementById('mf-title').focus();
 }
 
+function pickPerson(id){
+  PERSONS.forEach(function(p){
+    var btn=document.getElementById('pb-'+p.id);
+    if(!btn) return;
+    var sel=p.id===id;
+    btn.style.borderColor=sel?p.color:'#e5e7eb';
+    btn.style.background=sel?p.bg:'#fff';
+    btn.style.color=sel?p.color:'#888';
+    btn.style.fontWeight=sel?'700':'500';
+  });
+}
+function getSelectedPerson(){
+  var sel=PERSONS.find(function(p){ var b=document.getElementById('pb-'+p.id); return b&&b.style.fontWeight==='700'; });
+  return sel?sel.id:'ambos';
+}
+
 function closeModal(){ document.getElementById('modalBg').classList.add('hidden'); editingId=null; }
 
 /* ── CRUD with Supabase ── */
@@ -320,7 +356,8 @@ function saveGoal() {
     target:(document.getElementById('mf-target').value||'').trim(),
     progress:parseInt(document.getElementById('mf-progress').value)||0,
     notes:document.getElementById('mf-notes')?(document.getElementById('mf-notes').value||'').trim():'',
-    parent_id:pe?(pe.value||null):null
+    parent_id:pe?(pe.value||null):null,
+    person:getSelectedPerson()
   };
 
   var op;
@@ -411,6 +448,7 @@ window.deleteTask=deleteTask;
 window.markDone=markDone;
 window.toggleDaily=toggleDaily;
 window.quickProgress=quickProgress;
+window.pickPerson=pickPerson;
 
 function setHz(id){ currentHz=id; render(); }
 
