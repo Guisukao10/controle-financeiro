@@ -94,54 +94,90 @@ function renderDateNav(){
 }
 
 /* ── HOJE ── */
+var WK_PERSONS = [
+  {key:'gui', label:'Gui', color:'#1D4ED8', bg:'#EFF6FF'},
+  {key:'giu', label:'Giu', color:'#9333EA', bg:'#FDF4FF'}
+];
+
 function renderHoje(){
   var html = renderDateNav();
 
-  /* Overview cards */
-  html += '<div class="day-overview">';
+  /* ── Treino (gym-rats style) ── */
+  html += '<div style="background:#fff;border:1px solid #eaeaea;border-radius:14px;padding:18px;margin-bottom:12px;">';
+  html += '<div style="font-size:.63rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#E11D48;margin-bottom:14px">💪 Treino do dia</div>';
 
-  // Treino
-  var wkDone = dayWorkouts.length>0;
-  html += doCard('💪','Treino',
-    wkDone ? dayWorkouts.map(function(w){return w.type;}).join(', ') : null,
-    wkDone ? dayWorkouts.reduce(function(s,w){return s+w.duration_min;},0)+'min total' : null,
-    '#E11D48','treino');
+  WK_PERSONS.forEach(function(p){
+    var wks  = dayWorkouts.filter(function(w){ return w.person === p.key; });
+    var done = wks.length > 0;
 
-  // Sono
-  html += doCard('😴','Sono',
-    daySleep ? daySleep.hours+'h' : null,
-    daySleep ? 'Qualidade: '+stars(daySleep.quality) : null,
-    '#9333EA','sono');
+    html += '<div style="border:2px solid '+(done?p.color:'#eaeaea')+';border-radius:10px;padding:13px 14px;margin-bottom:10px;background:'+(done?p.bg:'#fff')+';transition:all .2s;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+    html += '<span style="font-size:.88rem;font-weight:800;color:'+p.color+'">'+p.label+'</span>';
 
-  // Peso
-  html += doCard('📏','Peso',
-    dayMetrics && dayMetrics.weight_kg ? dayMetrics.weight_kg+'kg' : null,
-    dayMetrics ? 'Medido hoje' : null,
-    '#1D4ED8','metricas');
-
-  // Humor
-  html += doCard('😊','Humor',
-    dayMood ? MOOD_EMOJI[dayMood.mood]+' '+ENERGY_EMOJI[dayMood.energy] : null,
-    dayMood ? 'Estresse: '+STRESS_LABELS[dayMood.stress] : null,
-    '#15803D','humor');
+    if(done){
+      html += '<span style="font-size:.65rem;font-weight:700;color:#15803D;background:#F0FDF4;padding:2px 8px;border-radius:9999px;">✓ Treinou hoje</span>';
+      html += '</div>';
+      wks.forEach(function(w){
+        html += '<div style="font-size:.82rem;color:#333;margin-top:8px;line-height:1.5;">'+esc(w.notes||w.type||'Treino registrado')+'</div>';
+        html += '<button onclick="deleteWorkout(\''+w.id+'\')" style="font-size:.63rem;color:#ccc;background:none;border:none;cursor:pointer;padding:3px 0;margin-top:2px;">↩ desfazer</button>';
+      });
+    } else {
+      html += '<span style="font-size:.72rem;color:#bbb;">Não registrado</span></div>';
+      html += '<div id="wkForm-'+p.key+'" style="display:none;margin-top:10px;">';
+      html += '<input id="wkDesc-'+p.key+'" type="text" placeholder="O que você fez? Academia, Beach Tennis, Futebol..." '+
+        'onkeydown="if(event.key===\'Enter\')saveQuickWorkout(\''+p.key+'\')" '+
+        'style="width:100%;padding:9px 11px;border:1.5px solid '+p.color+';border-radius:8px;font-family:inherit;font-size:.82rem;margin-bottom:8px;box-sizing:border-box;outline:none;background:#fff;color:#1a1a1a"/>';
+      html += '<button onclick="saveQuickWorkout(\''+p.key+'\')" style="width:100%;padding:9px;background:'+p.color+';color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;">✓ Confirmar</button>';
+      html += '</div>';
+      html += '<button onclick="showWkForm(\''+p.key+'\')" id="wkBtn-'+p.key+'" '+
+        'style="margin-top:10px;width:100%;padding:10px;border:2px dashed '+p.color+';border-radius:9px;'+
+        'background:transparent;color:'+p.color+';font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;">'+
+        '+ '+p.label+' treinou hoje!</button>';
+    }
+    html += '</div>';
+  });
 
   html += '</div>';
 
-  /* Health goals widget */
-  html += '<div style="background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;margin-bottom:14px">'+
-    '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#E11D48;margin-bottom:12px">❤️ Metas de Saúde — check-in diário</div>'+
-    '<div id="saudeMetasWidget"></div>'+
-  '</div>';
+  /* ── Peso + Humor rápidos (sem Sono) ── */
+  html += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px;">';
+  html += doCard('📏','Peso',
+    dayMetrics&&dayMetrics.weight_kg ? dayMetrics.weight_kg+'kg' : null,
+    dayMetrics ? 'Medido hoje' : null, '#1D4ED8','metricas');
+  html += doCard('😊','Humor',
+    dayMood ? MOOD_EMOJI[dayMood.mood]+' '+ENERGY_EMOJI[dayMood.energy] : null,
+    dayMood ? 'Estresse: '+STRESS_LABELS[dayMood.stress] : null, '#15803D','humor');
+  html += '</div>';
 
-  /* Today summary */
-  html += '<div class="section-panel">'+
-    '<div class="sp-header"><span class="sp-title">📋 Resumo do dia</span></div>'+
-    '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">'+
-      wkSummary()+sleepSummary()+moodSummary()+metricsSummary()+
-    '</div></div>';
+  /* ── Metas de saúde ── */
+  html += '<div style="background:#fff;border:1px solid #eaeaea;border-radius:12px;padding:16px;">';
+  html += '<div style="font-size:.63rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:#E11D48;margin-bottom:12px">❤️ Metas de Saúde — check-in diário</div>';
+  html += '<div id="saudeMetasWidget"></div>';
+  html += '</div>';
 
   document.getElementById('mainPanel').innerHTML = html;
   if(window.GoalsWidget) GoalsWidget.render('saudeMetasWidget','sau');
+}
+
+function showWkForm(personKey){
+  var form=document.getElementById('wkForm-'+personKey);
+  var btn=document.getElementById('wkBtn-'+personKey);
+  if(form) form.style.display='block';
+  if(btn)  btn.style.display='none';
+  setTimeout(function(){ var i=document.getElementById('wkDesc-'+personKey); if(i) i.focus(); },50);
+}
+
+function saveQuickWorkout(personKey){
+  var input=document.getElementById('wkDesc-'+personKey);
+  var desc=(input?input.value:'').trim();
+  if(!desc){ if(input) input.focus(); return; }
+  var data={id:uid(),date:currentDate,type:'Treino',person:personKey,
+    duration_min:0,intensity:3,calories_burned:0,goal_id:null,
+    notes:desc,created_at:new Date().toISOString()};
+  db.from('workouts').insert(data).then(function(res){
+    dayWorkouts.push(Array.isArray(res)?res[0]:data);
+    renderSection();
+  }).catch(function(e){alert('Erro: '+e.message);});
 }
 
 function doCard(icon,lbl,val,sub,color,section){
@@ -539,6 +575,7 @@ window.saveWorkout=saveWorkout; window.saveSleep=saveSleep;
 window.saveMetrics=saveMetrics; window.saveMood=saveMood;
 window.deleteWorkout=deleteWorkout; window.incGoal=incGoal;
 window.pickWkType=pickWkType; window.setRating=setRating;
+window.showWkForm=showWkForm; window.saveQuickWorkout=saveQuickWorkout;
 
 document.getElementById('modalBg').addEventListener('click',function(e){if(e.target===this)closeModal();});
 document.addEventListener('keydown',function(e){if(e.key==='Escape')closeModal();});

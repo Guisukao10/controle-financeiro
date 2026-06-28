@@ -73,9 +73,9 @@ function paceInfo(count, targetCount, deadline) {
   var remaining = targetCount - count;
   if (remaining <= 0) return { text:'✅ Meta atingida!', ok:true };
   if (daysLeft === 0) return { text:'⚠️ Prazo vencido', ok:false };
-  var perWeek = (remaining / daysLeft * 7);
+  var perWeek = Math.ceil(remaining / daysLeft * 7);
   var ok = perWeek <= 5;
-  return { text: '~'+perWeek.toFixed(1)+' dias/semana ('+daysLeft+' dias restantes)', ok:ok };
+  return { text: '~'+perWeek+' dia'+(perWeek!==1?'s':'')+'/semana ('+daysLeft+' dias restantes)', ok:ok };
 }
 
 /* ── Data loading ── */
