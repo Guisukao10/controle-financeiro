@@ -30,6 +30,7 @@ var currentHz    = 'decada';
 var editingId    = null;
 var allGoals     = [];
 var allTasks     = [];
+var allGoalLogs  = [];
 var todayChecks  = {};
 var personFilter = 'all';
 
@@ -53,17 +54,43 @@ function showError(msg) {
     '<div style="font-size:1.4rem;margin-bottom:10px">⚠️</div>'+msg+'</div>';
 }
 
+/* ── Goal log helpers ── */
+function getLogsForPerson(goalId, person) {
+  return allGoalLogs.filter(function(l){ return l.goal_id===goalId && l.person===person; });
+}
+function isCheckedInToday(goalId, person) {
+  return allGoalLogs.some(function(l){ return l.goal_id===goalId && l.person===person && l.date===todayKey(); });
+}
+function paceInfo(count, targetCount, deadline) {
+  if (!deadline) return null;
+  var months = {Jan:0,Fev:1,Mar:2,Abr:3,Mai:4,Jun:5,Jul:6,Ago:7,Set:8,Out:9,Nov:10,Dez:11};
+  var parts = deadline.split('/');
+  if (parts.length!==2) return null;
+  var m = months[parts[0]], y = parseInt(parts[1]);
+  if (m===undefined || !y) return null;
+  var end = new Date(y, m+1, 0);
+  var daysLeft = Math.max(0, Math.floor((end - new Date()) / 86400000));
+  var remaining = targetCount - count;
+  if (remaining <= 0) return { text:'✅ Meta atingida!', ok:true };
+  if (daysLeft === 0) return { text:'⚠️ Prazo vencido', ok:false };
+  var perWeek = (remaining / daysLeft * 7);
+  var ok = perWeek <= 5;
+  return { text: '~'+perWeek.toFixed(1)+' dias/semana ('+daysLeft+' dias restantes)', ok:ok };
+}
+
 /* ── Data loading ── */
 function loadAll() {
   setLoading('Carregando metas...');
   return Promise.all([
     db.from('goals').order('created_at',{ascending:true}).select('*'),
     db.from('daily_tasks').eq('active','true').order('sort_order',{ascending:true}).select('*'),
-    db.from('daily_checks').eq('date', todayKey()).select('*')
+    db.from('daily_checks').eq('date', todayKey()).select('*'),
+    db.from('goal_logs').select('*')
   ]).then(function(results){
-    allGoals = results[0] || [];
-    allTasks = results[1] || [];
-    var checks = results[2] || [];
+    allGoals    = results[0] || [];
+    allTasks    = results[1] || [];
+    allGoalLogs = results[3] || [];
+    var checks  = results[2] || [];
     todayChecks = {};
     checks.forEach(function(c){ if(c.done) todayChecks[c.task_id]=true; });
     render();
@@ -182,7 +209,56 @@ function renderGoalsPanel() {
   document.getElementById('mainPanel').innerHTML = header + cards;
 }
 
+function goalCardCount(g) {
+  var area      = areaInfo(g.area||'pes');
+  var personInfo= PERSONS.find(function(p){return p.id===(g.person||'ambos');})||PERSONS[2];
+  var trackers  = g.person==='ambos' ? ['gui','giu'] : [g.person||'gui'];
+
+  var rows = trackers.map(function(pk){
+    var pi      = PERSONS.find(function(p){return p.id===pk;})||PERSONS[0];
+    var count   = getLogsForPerson(g.id, pk).length;
+    var pct     = g.target_count>0 ? Math.min(100,Math.round(count/g.target_count*100)) : 0;
+    var done    = isCheckedInToday(g.id, pk);
+    var pace    = paceInfo(count, g.target_count, g.deadline);
+
+    return '<div style="margin-bottom:10px;padding:10px;background:#fafafa;border-radius:8px;border:1px solid #f0f0f0;">'+
+      '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;">'+
+        '<span style="font-size:.72rem;font-weight:700;color:'+pi.color+'">'+pi.icon+' '+pi.label+'</span>'+
+        '<span style="font-size:.78rem;font-weight:800;color:#1a1a1a">'+count+' <span style="font-size:.65rem;font-weight:500;color:#aaa">/ '+g.target_count+' dias</span></span>'+
+      '</div>'+
+      '<div style="background:#ebebeb;border-radius:5px;height:7px;overflow:hidden;margin-bottom:6px;">'+
+        '<div style="height:100%;border-radius:5px;background:'+pi.color+';width:'+pct+'%;transition:width .4s;"></div>'+
+      '</div>'+
+      (pace?'<div style="font-size:.63rem;color:'+(pace.ok?'#15803D':'#EA580C')+';margin-bottom:6px;">'+pace.text+'</div>':'')+
+      '<button onclick="checkIn(\''+g.id+'\',\''+pk+'\')" style="'+
+        'width:100%;padding:7px;border-radius:7px;'+
+        'border:1.5px solid '+(done?pi.color:'#e5e7eb')+';'+
+        'background:'+(done?pi.bg:'#fff')+';color:'+(done?pi.color:'#888')+';'+
+        'font-family:inherit;font-size:.75rem;font-weight:700;cursor:pointer;transition:all .15s;">'+
+        (done?'✓ '+pi.label+' registrou hoje — clique para desfazer':'+ Registrar dia ('+pi.label+')')+
+      '</button>'+
+    '</div>';
+  }).join('');
+
+  return '<div class="goal-card" id="gc-'+g.id+'">'+
+    '<div class="gc-area">'+
+      '<div class="gc-area-dot" style="background:'+area.color+'"></div>'+
+      '<span class="gc-area-name" style="color:'+area.color+'">'+area.label+'</span>'+
+      '<span style="margin-left:auto;font-size:.65rem;font-weight:700;padding:2px 7px;border-radius:9999px;background:'+personInfo.bg+';color:'+personInfo.color+'">'+personInfo.icon+' '+personInfo.label+'</span>'+
+    '</div>'+
+    '<div class="gc-title">'+esc(g.title)+'</div>'+
+    (g.description?'<div class="gc-desc">'+esc(g.description)+'</div>':'')+
+    rows+
+    (g.deadline?'<div class="gc-meta" style="margin-top:4px;"><span class="gc-date">📅 '+esc(g.deadline)+'</span></div>':'')+
+    '<div class="gc-actions" style="margin-top:10px;">'+
+      '<button class="gc-btn" onclick="openModal(\''+g.id+'\')">✏ Editar</button>'+
+      '<button class="gc-btn del-btn" onclick="deleteGoal(\''+g.id+'\')">🗑</button>'+
+    '</div>'+
+  '</div>';
+}
+
 function goalCard(g) {
+  if (g.target_count > 0) return goalCardCount(g);
   var area  = areaInfo(g.area||'pes');
   var pct   = Math.min(g.progress||0,100);
   var done  = pct>=100;
@@ -321,6 +397,10 @@ function openModal(id) {
         '</div>'+
       '</div>'+
       '<div class="mf-field"><label>Meta quantitativa</label><input id="mf-target" type="text" placeholder="Ex: R$ 50.000, 10kg, 12 livros" value="'+esc(g?g.target:'')+'"/></div>'+
+      '<div class="mf-field"><label>Rastreamento por dias / vezes</label>'+
+        '<input type="number" id="mf-count" min="1" placeholder="Ex: 90 — ativa check-in diário por pessoa" value="'+esc(g&&g.target_count?g.target_count:'')+'"/>'+
+        '<span style="font-size:.6rem;color:#aaa;margin-top:2px">Preencha para habilitar ✓ Registrar dia. Deixe vazio para usar progresso (%) manual.</span>'+
+      '</div>'+
       parentSelect+
       '<div class="mf-field"><label>Progresso: <span id="mf-pct-val" style="color:#1D4ED8;font-weight:700">'+(g?g.progress:0)+'%</span></label>'+
         '<input type="range" id="mf-progress" min="0" max="100" step="5" value="'+(g?g.progress:0)+'" oninput="document.getElementById(\'mf-pct-val\').textContent=this.value+\'%\'"/></div>'+
@@ -385,7 +465,8 @@ function saveGoal() {
     progress:parseInt(document.getElementById('mf-progress').value)||0,
     notes:document.getElementById('mf-notes')?(document.getElementById('mf-notes').value||'').trim():'',
     parent_id:pe?(pe.value||null):null,
-    person:getSelectedPerson()
+    person:getSelectedPerson(),
+    target_count:parseInt(document.getElementById('mf-count').value)||null
   };
 
   var op;
@@ -417,6 +498,23 @@ function saveDailyTask() {
     allTasks.push(Array.isArray(res)?res[0]:data);
     closeModal(); renderDailyPanel();
   }).catch(function(e){alert('Erro: '+e.message);});
+}
+
+function checkIn(goalId, personKey) {
+  var today    = todayKey();
+  var existing = allGoalLogs.find(function(l){ return l.goal_id===goalId && l.person===personKey && l.date===today; });
+  if (existing) {
+    db.from('goal_logs').eq('id',existing.id).delete().then(function(){
+      allGoalLogs = allGoalLogs.filter(function(l){ return l.id!==existing.id; });
+      render();
+    }).catch(function(e){ alert('Erro: '+e.message); });
+  } else {
+    var row = { id:uid(), goal_id:goalId, date:today, person:personKey };
+    db.from('goal_logs').insert(row).then(function(res){
+      allGoalLogs.push(Array.isArray(res)?res[0]:row);
+      render();
+    }).catch(function(e){ alert('Erro: '+e.message); });
+  }
 }
 
 function deleteGoal(id){
@@ -478,6 +576,7 @@ window.toggleDaily=toggleDaily;
 window.quickProgress=quickProgress;
 window.pickPerson=pickPerson;
 window.setPersonFilter=setPersonFilter;
+window.checkIn=checkIn;
 
 function setHz(id){ currentHz=id; render(); }
 function setPersonFilter(id){ personFilter=(personFilter===id?'all':id); render(); }
