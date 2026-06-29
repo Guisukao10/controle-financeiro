@@ -99,29 +99,37 @@ function renderHoje(){
     var done = wks.length > 0;
 
     html += '<div style="border:2px solid '+(done?p.color:'#eaeaea')+';border-radius:10px;padding:13px 14px;margin-bottom:10px;background:'+(done?p.bg:'#fff')+';transition:all .2s;">';
-    html += '<div style="display:flex;justify-content:space-between;align-items:center;">';
+    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:'+(done?'10px':'0')+';">';
     html += '<span style="font-size:.88rem;font-weight:800;color:'+p.color+'">'+p.label+'</span>';
-
     if(done){
-      html += '<span style="font-size:.65rem;font-weight:700;color:#15803D;background:#F0FDF4;padding:2px 8px;border-radius:9999px;">✓ Treinou hoje</span>';
-      html += '</div>';
-      wks.forEach(function(w){
-        html += '<div style="font-size:.82rem;color:#333;margin-top:8px;line-height:1.5;">'+esc(w.notes||w.type||'Treino registrado')+'</div>';
-        html += '<button onclick="deleteWorkout(\''+w.id+'\')" style="font-size:.63rem;color:#ccc;background:none;border:none;cursor:pointer;padding:3px 0;margin-top:2px;">↩ desfazer</button>';
-      });
+      html += '<span style="font-size:.65rem;font-weight:700;color:#15803D;background:#F0FDF4;padding:2px 8px;border-radius:9999px;">✓ '+wks.length+' treino'+(wks.length>1?'s':'')+' hoje</span>';
     } else {
-      html += '<span style="font-size:.72rem;color:#bbb;">Não registrado</span></div>';
-      html += '<div id="wkForm-'+p.key+'" style="display:none;margin-top:10px;">';
-      html += '<input id="wkDesc-'+p.key+'" type="text" placeholder="O que você fez? Academia, Beach Tennis, Futebol..." '+
-        'onkeydown="if(event.key===\'Enter\')saveQuickWorkout(\''+p.key+'\')" '+
-        'style="width:100%;padding:9px 11px;border:1.5px solid '+p.color+';border-radius:8px;font-family:inherit;font-size:.82rem;margin-bottom:8px;box-sizing:border-box;outline:none;background:#fff;color:#1a1a1a"/>';
-      html += '<button onclick="saveQuickWorkout(\''+p.key+'\')" style="width:100%;padding:9px;background:'+p.color+';color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;">✓ Confirmar</button>';
-      html += '</div>';
-      html += '<button onclick="showWkForm(\''+p.key+'\')" id="wkBtn-'+p.key+'" '+
-        'style="margin-top:10px;width:100%;padding:10px;border:2px dashed '+p.color+';border-radius:9px;'+
-        'background:transparent;color:'+p.color+';font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;">'+
-        '+ '+p.label+' treinou hoje!</button>';
+      html += '<span style="font-size:.72rem;color:#bbb;">Não registrado</span>';
     }
+    html += '</div>';
+
+    /* list of workouts */
+    if(done){
+      wks.forEach(function(w){
+        html += '<div style="display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.6);border-radius:7px;padding:6px 10px;margin-bottom:5px;">';
+        html += '<span style="font-size:.8rem;color:#1a1a1a;flex:1;">'+esc(w.notes||w.type||'Treino')+'</span>';
+        html += '<button onclick="deleteWorkout(\''+w.id+'\')" style="font-size:.68rem;color:#bbb;background:none;border:none;cursor:pointer;padding:2px 4px;">↩</button>';
+        html += '</div>';
+      });
+    }
+
+    /* always show add form */
+    html += '<div id="wkForm-'+p.key+'" style="display:none;margin-top:8px;">';
+    html += '<input id="wkDesc-'+p.key+'" type="text" placeholder="O que você fez? Academia, Beach Tennis..." '+
+      'onkeydown="if(event.key===\'Enter\')saveQuickWorkout(\''+p.key+'\')" '+
+      'style="width:100%;padding:9px 11px;border:1.5px solid '+p.color+';border-radius:8px;font-family:inherit;font-size:.82rem;margin-bottom:8px;box-sizing:border-box;outline:none;background:#fff;color:#1a1a1a"/>';
+    html += '<button onclick="saveQuickWorkout(\''+p.key+'\')" style="width:100%;padding:9px;background:'+p.color+';color:#fff;border:none;border-radius:8px;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;">✓ Confirmar</button>';
+    html += '</div>';
+    html += '<button onclick="showWkForm(\''+p.key+'\')" id="wkBtn-'+p.key+'" '+
+      'style="margin-top:'+(done?'8':'10')+'px;width:100%;padding:'+(done?'7':'10')+'px;border:2px dashed '+p.color+';border-radius:9px;'+
+      'background:transparent;color:'+p.color+';font-family:inherit;font-size:.78rem;font-weight:700;cursor:pointer;">'+
+      (done?'+ Adicionar outro treino':'+ '+p.label+' treinou hoje!')+'</button>';
+
     html += '</div>';
   });
 
