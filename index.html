@@ -4,6 +4,13 @@
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width,initial-scale=1.0"/>
 <title>Suks &amp; Giu System</title>
+<link rel="manifest" href="/controle-financeiro/manifest.json">
+<meta name="theme-color" content="#111827">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="S&amp;G">
+<link rel="apple-touch-icon" href="/controle-financeiro/assets/icons/icon.svg">
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
 <link rel="stylesheet" href="assets/shared.css"/>
 <style>
@@ -122,5 +129,6 @@ body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#1a1a1a;min-height:
 <footer class="footer">
   Suks &amp; Giu System · Feito com 💚 para Guilherme &amp; Giulia
 </footer>
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/controle-financeiro/sw.js');</script>
 </body>
 </html>

@@ -1,0 +1,43 @@
+{
+  "name": "Suks & Giu System",
+  "short_name": "S&G",
+  "description": "Sistema pessoal de Guilherme & Giulia — finanças, metas, saúde e hábitos",
+  "start_url": "/controle-financeiro/",
+  "scope": "/controle-financeiro/",
+  "display": "standalone",
+  "background_color": "#F2F3F5",
+  "theme_color": "#111827",
+  "orientation": "any",
+  "lang": "pt-BR",
+  "icons": [
+    {
+      "src": "/controle-financeiro/assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "/controle-financeiro/assets/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Metas",
+      "url": "/controle-financeiro/metas/",
+      "description": "Metas & Objetivos"
+    },
+    {
+      "name": "Saúde",
+      "url": "/controle-financeiro/saude/",
+      "description": "Treinos e saúde"
+    },
+    {
+      "name": "Financeiro",
+      "url": "/controle-financeiro/financeiro/",
+      "description": "Controle financeiro"
+    }
+  ]
+}
