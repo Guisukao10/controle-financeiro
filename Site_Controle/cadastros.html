@@ -1,0 +1,118 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Cadastros - Controle Financeiro</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">Controle Financeiro</div>
+      <nav class="nav-menu">
+        <a class="nav-link" href="index.html">Dashboard</a>
+        <a class="nav-link" href="lancamentos.html">Lançamentos</a>
+        <a class="nav-link" href="analise.html">Análise</a>
+        <a class="nav-link" href="forecast.html">Forecast</a>
+        <a class="nav-link" href="metas.html">Metas</a>
+        <a class="nav-link" href="cadastros.html">Cadastros</a>
+        <a class="nav-link" href="importar.html">Importação</a>
+        <a class="nav-link" href="configuracoes.html">Configurações</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="page-header">
+        <h1>Cadastros</h1>
+        <p>Categorizar e organizar seus dados</p>
+      </header>
+      <section class="content-area">
+        <div class="tabs-container">
+          <div class="tabs-menu">
+            <button class="tab-button active" data-tab="responsaveis">Responsáveis</button>
+            <button class="tab-button" data-tab="categorias-gastos">Categorias Gastos</button>
+            <button class="tab-button" data-tab="categorias-ganhos">Categorias Ganhos</button>
+            <button class="tab-button" data-tab="subcategorias">Subcategorias</button>
+            <button class="tab-button" data-tab="pagamentos">Pagamentos</button>
+            <button class="tab-button" data-tab="status">Status</button>
+            <button class="tab-button" data-tab="recebimento">Recebimento</button>
+          </div>
+
+          <div id="responsaveis" class="tab-content active">
+            <h3>Responsáveis</h3>
+            <div class="form-group">
+              <input type="text" id="nomeResponsavel" placeholder="Nome do responsável">
+              <button class="btn btn-primary" onclick="CadastrosPage.adicionarResponsavel()">Adicionar</button>
+            </div>
+            <div id="listaResponsaveis"></div>
+          </div>
+
+          <div id="categorias-gastos" class="tab-content">
+            <h3>Categorias de Gastos</h3>
+            <div class="form-group">
+              <input type="text" id="nomeCategoriaGasto" placeholder="Nome categoria">
+              <button class="btn btn-primary" onclick="CadastrosPage.adicionarCategoriaGasto()">Adicionar</button>
+            </div>
+            <div id="listaCategoriaGastos"></div>
+          </div>
+
+          <div id="categorias-ganhos" class="tab-content">
+            <h3>Categorias de Ganhos</h3>
+            <div class="form-group">
+              <input type="text" id="nomeCategoriaGanho" placeholder="Nome categoria">
+              <button class="btn btn-primary" onclick="CadastrosPage.adicionarCategoriaGanho()">Adicionar</button>
+            </div>
+            <div id="listaCategoriaGanhos"></div>
+          </div>
+
+          <div id="subcategorias" class="tab-content">
+            <h3>Subcategorias</h3>
+            <div class="form-group">
+              <select id="selectCategoriaSubcat">
+                <option value="">Selecione uma categoria</option>
+              </select>
+              <input type="text" id="nomeSubcategoria" placeholder="Nome subcategoria">
+              <button class="btn btn-primary" onclick="CadastrosPage.adicionarSubcategoria()">Adicionar</button>
+            </div>
+            <div id="listaSubcategorias"></div>
+          </div>
+
+          <div id="pagamentos" class="tab-content">
+            <h3>Tipos de Pagamento</h3>
+            <div class="form-group">
+              <input type="text" id="nomePagamento" placeholder="Tipo (ex: Débito)">
+              <button class="btn btn-primary" onclick="CadastrosPage.adicionarTipoPagamento()">Adicionar</button>
+            </div>
+            <div id="listaTPagamento"></div>
+          </div>
+
+          <div id="status" class="tab-content">
+            <h3>Status</h3>
+            <div class="form-group">
+              <input type="text" id="nomeStatus" placeholder="Status (ex: Pago)">
+              <button class="btn btn-primary" onclick="CadastrosPage.adicionarStatus()">Adicionar</button>
+            </div>
+            <div id="listaStatus"></div>
+          </div>
+
+          <div id="recebimento" class="tab-content">
+            <h3>Tipos de Recebimento</h3>
+            <div class="form-group">
+              <input type="text" id="nomeRecebimento" placeholder="Tipo (ex: Boleto)">
+              <button class="btn btn-primary" onclick="CadastrosPage.adicionarTipoRecebimento()">Adicionar</button>
+            </div>
+            <div id="listaRecebimento"></div>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <!-- Dependências na ordem correta -->
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/cadastros.js"></script>
+  <!-- Inicialização -->
+  <script src="js/app.js"></script>
+</body>
+</html>

@@ -1,21 +1,70 @@
 /* ── Suks & Giu System — Shared Styles ── */
 *,*::before,*::after{box-sizing:border-box}
 
-/* Top nav bar shown in all modules */
+/* ── Top nav ── */
 .sgs-nav{
   display:flex;align-items:center;justify-content:space-between;
-  padding:10px 20px;background:#fff;border-bottom:1px solid #eaeaea;
-  font-family:'Inter',sans-serif;
+  padding:10px 16px;background:#fff;border-bottom:1px solid #eaeaea;
+  font-family:'Inter',sans-serif;position:sticky;top:0;z-index:50;
 }
-.sgs-nav-brand{display:flex;align-items:center;gap:10px;text-decoration:none}
-.sgs-nav-logo{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,#1a1a1a 0%,#555 100%);display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:800;color:#fff;letter-spacing:-.5px;flex-shrink:0}
+.sgs-nav-brand{display:flex;align-items:center;gap:8px;text-decoration:none}
+.sgs-nav-logo{width:30px;height:30px;border-radius:9px;background:linear-gradient(135deg,#1a1a1a 0%,#374151 100%);display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800;color:#fff;letter-spacing:-.5px;flex-shrink:0}
 .sgs-nav-name{font-size:.82rem;font-weight:700;color:#1a1a1a;letter-spacing:-.02em}
-.sgs-nav-links{display:flex;align-items:center;gap:4px}
-.sgs-nav-link{padding:5px 11px;border-radius:7px;font-size:.76rem;font-weight:500;color:#888;text-decoration:none;transition:all .15s;white-space:nowrap}
+.sgs-nav-links{display:flex;align-items:center;gap:3px;flex-wrap:nowrap;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;padding-bottom:2px}
+.sgs-nav-links::-webkit-scrollbar{display:none}
+.sgs-nav-link{padding:6px 11px;border-radius:7px;font-size:.74rem;font-weight:500;color:#888;text-decoration:none;transition:all .15s;white-space:nowrap;flex-shrink:0}
 .sgs-nav-link:hover{background:#f5f5f5;color:#1a1a1a}
 .sgs-nav-link.active{background:#1a1a1a;color:#fff}
-.sgs-nav-link .nl-icon{margin-right:4px}
-@media(max-width:560px){
+.sgs-nav-link .nl-icon{margin-right:3px}
+
+/* ── Bottom navigation (mobile) ── */
+.sgs-bottom-nav{
+  display:none;position:fixed;bottom:0;left:0;right:0;z-index:100;
+  background:#fff;border-top:1px solid #eaeaea;
+  padding:6px 8px calc(6px + env(safe-area-inset-bottom));
+  display:none;grid-template-columns:repeat(6,1fr);gap:2px;
+}
+.sbn-item{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 4px;border-radius:8px;text-decoration:none;color:#9CA3AF;font-size:.55rem;font-weight:600;text-align:center;transition:all .15s;border:none;background:none;cursor:pointer;font-family:inherit;}
+.sbn-item .sbn-icon{font-size:1.2rem;line-height:1}
+.sbn-item.active,.sbn-item:active{color:#1a1a1a;background:#f3f4f6}
+.sbn-today{color:#1D4ED8!important}
+.sbn-hoje-pill{
+  background:#1a1a1a;color:#fff!important;border-radius:10px;
+  padding:8px 6px;margin:-4px 0;
+}
+.sbn-hoje-pill .sbn-icon{font-size:1rem}
+
+/* ── Mode toggle ── */
+.sgs-mode-btn{
+  width:32px;height:32px;border-radius:8px;border:1.5px solid #e5e7eb;
+  background:#fff;cursor:pointer;font-size:.95rem;display:flex;align-items:center;
+  justify-content:center;flex-shrink:0;transition:all .15s;
+}
+.sgs-mode-btn:hover{background:#f3f4f6}
+
+/* ── Compact mode (mobile) ── */
+body.sgs-compact .sgs-nav-name{display:none}
+body.sgs-compact .wrap{padding:12px 12px 80px!important}
+body.sgs-compact .page-header{margin-bottom:14px!important}
+body.sgs-compact .page-title{font-size:1rem!important}
+body.sgs-compact .sgs-bottom-nav{display:grid}
+body.sgs-compact .conn-bar{grid-template-columns:1fr 1fr!important;gap:8px!important}
+body.sgs-compact .goals-grid{gap:8px}
+body.sgs-compact .goal-row{padding:12px 14px}
+body.sgs-compact .gr-title{font-size:.9rem}
+body.sgs-compact .gc-btn{padding:6px 10px;font-size:.7rem}
+
+/* ── Responsive base ── */
+@media(max-width:640px){
+  .sgs-nav{padding:8px 12px}
   .sgs-nav-links{gap:2px}
   .sgs-nav-link{padding:5px 8px;font-size:.7rem}
+
+  /* Larger tap targets */
+  button,a,.btn,input[type=button],input[type=submit]{min-height:40px}
+  input,select,textarea{font-size:16px!important} /* prevent iOS zoom */
+}
+
+@media(max-width:480px){
+  .sgs-nav-name{display:none}
 }

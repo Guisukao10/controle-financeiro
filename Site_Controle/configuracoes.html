@@ -1,0 +1,93 @@
+﻿<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Configurações - Controle Financeiro</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">Controle Financeiro</div>
+      <nav class="nav-menu">
+        <a class="nav-link" href="index.html">Dashboard</a>
+        <a class="nav-link" href="lancamentos.html">Lançamentos</a>
+        <a class="nav-link" href="analise.html">Análise</a>
+        <a class="nav-link" href="forecast.html">Forecast</a>
+        <a class="nav-link" href="metas.html">Metas</a>
+        <a class="nav-link" href="cadastros.html">Cadastros</a>
+        <a class="nav-link" href="importar.html">Importação</a>
+        <a class="nav-link" href="configuracoes.html">Configurações</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="page-header">
+        <h1>Configurações</h1>
+        <p>Preferências e backup do sistema</p>
+      </header>
+      <section class="content-area">
+        <div class="panel">
+          <h3>Informações do Ambiente</h3>
+          <p><strong>Armazenamento:</strong> <code>localStorage (navegador local)</code></p>
+          <p><strong>Aplicação:</strong> Controle Financeiro v1.0</p>
+          <p><strong>Data do Navegador:</strong> <span id="dataAtual"></span></p>
+          <p><strong>Espaço localStorage:</strong> <span id="espacoStorage"></span></p>
+        </div>
+
+        <div class="panel">
+          <h3>Backup e Restauração</h3>
+          <div class="form-group">
+            <label><strong>Exportar Dados em JSON</strong></label>
+            <p>Baixar um arquivo JSON com todos os seus dados atuais (lançamentos, categorias, etc.).</p>
+            <button class="btn btn-primary" onclick="ConfiguracoesPage.exportarJSON()">Exportar JSON</button>
+          </div>
+
+          <div class="form-group" style="margin-top: 1rem;">
+            <label><strong>Importar Backup</strong></label>
+            <p>Restaurar dados de um arquivo JSON previamente exportado.</p>
+            <input type="file" id="importFile" accept=".json" />
+            <button class="btn btn-primary" onclick="ConfiguracoesPage.importarJSON()">Importar</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Dados de Teste</h3>
+          <div class="form-group">
+            <label><strong>Carregar Dados Mockados</strong></label>
+            <p>Preencher localStorage com dados de exemplo para teste (requer confirmação).</p>
+            <button class="btn btn-warning" onclick="ConfiguracoesPage.carregarMockados()">Carregar Mock</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Operações Destrutivas</h3>
+          <div class="form-group">
+            <label><strong>Resetar localStorage</strong></label>
+            <p style="color: #ef476f;"><strong>⚠ ATENÇÃO:</strong> Esta ação limpa <u>todos os dados</u> locais e recarrega a página. Faça backup antes!</p>
+            <button class="btn btn-danger" onclick="ConfiguracoesPage.resetarStorage()">Resetar localStorage</button>
+          </div>
+
+          <div class="form-group" style="margin-top: 1rem;">
+            <label><strong>Limpar localStorage Apenas</strong></label>
+            <p>Remove dados sem recarregar (para desenvolvedor/debug).</p>
+            <button class="btn btn-danger" onclick="ConfiguracoesPage.limparStorageSem()">Limpar</button>
+          </div>
+        </div>
+
+        <div class="panel">
+          <h3>Informações de Armazenamento</h3>
+          <div id="statsStorage" style="font-family: monospace; font-size: 0.9rem; line-height: 1.6;"></div>
+        </div>
+      </section>
+    </div>
+  </div>
+  <!-- Dependências na ordem correta -->
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/configuracoes.js"></script>
+  <!-- Inicialização -->
+  <script src="js/app.js"></script>
+</body>
+</html>

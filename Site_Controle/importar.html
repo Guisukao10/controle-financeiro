@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Importação - Controle Financeiro</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <div class="brand">Controle Financeiro</div>
+      <nav class="nav-menu">
+        <a class="nav-link" href="index.html">Dashboard</a>
+        <a class="nav-link" href="lancamentos.html">Lançamentos</a>
+        <a class="nav-link" href="analise.html">Análise</a>
+        <a class="nav-link" href="forecast.html">Forecast</a>
+        <a class="nav-link" href="metas.html">Metas</a>
+        <a class="nav-link" href="cadastros.html">Cadastros</a>
+        <a class="nav-link" href="importar.html">Importação</a>
+        <a class="nav-link" href="configuracoes.html">Configurações</a>
+      </nav>
+    </aside>
+    <div class="main-content">
+      <header class="page-header">
+        <h1>Importação de Dados</h1>
+        <p>Importe seus lançamentos a partir de arquivos Excel ou CSV</p>
+      </header>
+      <section class="content-area">
+        <!-- Etapa 1: Upload -->
+        <div class="panel" id="stepUpload">
+          <h3>Passo 1: Selecione o arquivo</h3>
+          <div class="form-group">
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv" />
+            <button class="btn btn-primary" onclick="ImportarPage.handleFileSelect()">Carregar arquivo</button>
+          </div>
+          <p style="font-size: 0.875rem; color: #6b7280; margin-top: 1rem;">Formatos suportados: Excel (.xlsx, .xls) e CSV</p>
+        </div>
+
+        <!-- Etapa 2: Tipo de lançamento -->
+        <div class="panel" id="stepType" style="display: none;">
+          <h3>Passo 2: Tipo de lançamento</h3>
+          <div class="form-group">
+            <label>Selecione se os dados são:</label>
+            <div style="display: flex; gap: 1rem; margin-top: 0.5rem;">
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="radio" name="tipoLancamento" value="despesa" checked />
+                Gastos (Despesas)
+              </label>
+              <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="radio" name="tipoLancamento" value="receita" />
+                Ganhos (Receitas)
+              </label>
+            </div>
+          </div>
+        </div>
+
+        <!-- Etapa 3: Pré-visualização -->
+        <div class="panel" id="stepPreview" style="display: none;">
+          <h3>Passo 3: Pré-visualização e Mapeamento</h3>
+          <div style="margin-bottom: 1.5rem;">
+            <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; font-weight: 600;">Primeiras 5 linhas do arquivo:</h4>
+            <div id="previewTable" style="overflow-x: auto; margin-bottom: 1rem;"></div>
+          </div>
+
+          <div>
+            <h4 style="font-size: 0.95rem; margin-bottom: 0.75rem; font-weight: 600;">Mapeamento de colunas:</h4>
+            <div id="mappingContainer" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 1rem;"></div>
+          </div>
+        </div>
+
+        <!-- Etapa 4: Validação e Importação -->
+        <div class="panel" id="stepValidation" style="display: none;">
+          <h3>Passo 4: Validação</h3>
+          <div id="validationResult"></div>
+          <div style="margin-top: 1.5rem; display: flex; gap: 1rem;">
+            <button class="btn btn-primary" onclick="ImportarPage.performImport()" id="btnImport">Importar dados</button>
+            <button class="btn btn-secondary" onclick="ImportarPage.reset()" style="background: #6b7280; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer;">Começar novamente</button>
+          </div>
+        </div>
+
+        <!-- Etapa 5: Resultado -->
+        <div class="panel" id="stepResult" style="display: none;">
+          <h3>Importação Concluída</h3>
+          <div id="resultReport" style="background: #f3f4f6; padding: 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-family: monospace; font-size: 0.875rem;"></div>
+          <div style="display: flex; gap: 1rem;">
+            <button class="btn btn-primary" onclick="window.location.href='index.html'">Ir para Dashboard</button>
+            <button class="btn btn-secondary" onclick="ImportarPage.reset()" style="background: #6b7280; color: white; padding: 0.5rem 1rem; border: none; border-radius: 0.5rem; cursor: pointer;">Importar outro arquivo</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <!-- Biblioteca XLSX com fallback de erro -->
+  <script>
+    window.XLSX_LOADED = false;
+    window.onXLSXLoaded = function() {
+      window.XLSX_LOADED = true;
+    };
+  </script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.min.js" onload="window.onXLSXLoaded()"></script>
+  
+  <!-- Dependências na ordem correta: storage > utils > ui > importar > app -->
+  <script src="js/storage.js"></script>
+  <script src="js/utils.js"></script>
+  <script src="js/ui.js"></script>
+  <script src="js/importar.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

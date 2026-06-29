@@ -1,5 +1,5 @@
 /* ── Suks & Giu System — Service Worker ── */
-var CACHE = 'sgs-v1';
+var CACHE = 'sgs-v2';
 
 var SHELL = [
   '/controle-financeiro/',
@@ -9,6 +9,8 @@ var SHELL = [
   '/controle-financeiro/assets/supabase.js',
   '/controle-financeiro/assets/goals-widget.js',
   '/controle-financeiro/assets/icons/icon.svg',
+  '/controle-financeiro/assets/mobile.js',
+  '/controle-financeiro/hoje.html',
   '/controle-financeiro/metas/',
   '/controle-financeiro/metas/index.html',
   '/controle-financeiro/metas/app.js',

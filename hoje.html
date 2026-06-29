@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover"/>
+<title>Hoje · Suks &amp; Giu System</title>
+<link rel="manifest" href="/controle-financeiro/manifest.json">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="S&amp;G Hoje">
+<link rel="apple-touch-icon" href="/controle-financeiro/assets/icons/icon.svg">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="assets/shared.css"/>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'Inter',sans-serif;background:#F2F3F5;color:#111827;min-height:100vh;padding-bottom:calc(80px + env(safe-area-inset-bottom))}
+
+.wrap{max-width:640px;margin:0 auto;padding:16px 14px}
+
+/* Date header */
+.hoje-date{text-align:center;padding:18px 0 14px}
+.hoje-date-day{font-size:1.5rem;font-weight:800;color:#111827;letter-spacing:-.03em}
+.hoje-date-sub{font-size:.78rem;color:#9CA3AF;margin-top:2px}
+
+/* Section */
+.h-section{margin-bottom:14px}
+.h-section-title{font-size:.6rem;font-weight:800;text-transform:uppercase;letter-spacing:.1em;color:#9CA3AF;margin-bottom:8px;padding:0 2px}
+
+/* Workout card */
+.wk-card{background:#fff;border:2px solid #E5E7EB;border-radius:14px;padding:14px 16px;margin-bottom:8px;transition:all .2s}
+.wk-card.done{border-color:var(--p-color);background:var(--p-bg)}
+.wk-person{font-size:.92rem;font-weight:800;color:var(--p-color);margin-bottom:6px;display:flex;justify-content:space-between;align-items:center}
+.wk-done-badge{font-size:.65rem;font-weight:700;color:#15803D;background:#F0FDF4;padding:3px 9px;border-radius:9999px;border:1px solid #86EFAC}
+.wk-list{display:flex;flex-direction:column;gap:5px;margin-bottom:8px}
+.wk-item{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.7);border-radius:8px;padding:7px 10px}
+.wk-item-text{font-size:.84rem;color:#111827;flex:1;font-weight:500}
+.wk-undo{background:none;border:none;color:#D1D5DB;cursor:pointer;font-size:.8rem;padding:3px}
+.wk-input-wrap{display:none;margin-top:4px}
+.wk-input-wrap.open{display:block}
+.wk-input{width:100%;padding:10px 12px;border:1.5px solid var(--p-color);border-radius:9px;font-family:inherit;font-size:.88rem;color:#111827;outline:none;background:#fff;margin-bottom:8px}
+.wk-confirm{width:100%;padding:11px;background:var(--p-color);color:#fff;border:none;border-radius:9px;font-family:inherit;font-size:.85rem;font-weight:700;cursor:pointer}
+.wk-add-btn{width:100%;padding:10px;border:2px dashed var(--p-color);border-radius:10px;background:transparent;color:var(--p-color);font-family:inherit;font-size:.82rem;font-weight:700;cursor:pointer;margin-top:4px}
+
+/* Goal check-in card */
+.goal-card-hoje{background:#fff;border:1px solid #E5E7EB;border-left:4px solid var(--g-color);border-radius:12px;padding:13px 15px;margin-bottom:8px}
+.gcj-head{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.gcj-title{font-size:.9rem;font-weight:700;color:#111827;flex:1;margin-right:10px;line-height:1.3}
+.gcj-person{font-size:.62rem;font-weight:700;padding:2px 7px;border-radius:9999px}
+.gcj-bars{display:flex;flex-direction:column;gap:7px;margin-bottom:8px}
+.gcj-bar-row{display:flex;align-items:center;gap:8px}
+.gcj-bar-label{font-size:.65rem;font-weight:700;width:24px;flex-shrink:0}
+.gcj-bar-track{flex:1;height:7px;background:#E5E7EB;border-radius:9999px;overflow:hidden}
+.gcj-bar-fill{height:100%;border-radius:9999px;transition:width .4s}
+.gcj-bar-count{font-size:.7rem;font-weight:800;min-width:50px;text-align:right}
+.gcj-check-btn{width:100%;padding:9px;border-radius:9px;border:1.5px solid;font-family:inherit;font-size:.8rem;font-weight:700;cursor:pointer;transition:all .15s}
+.gcj-check-btn.checked{border-color:#15803D;background:#F0FDF4;color:#15803D}
+.gcj-check-btn.unchecked{border-color:#E5E7EB;background:#fff;color:#6B7280}
+.gcj-check-btn.unchecked:active{background:#F9FAFB}
+
+/* Progress ring */
+.today-ring{display:flex;justify-content:center;align-items:center;padding:16px 0 8px}
+.ring-wrap{position:relative;width:100px;height:100px}
+.ring-wrap svg{transform:rotate(-90deg)}
+.ring-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.ring-pct{font-size:1.5rem;font-weight:800;color:#111827;line-height:1}
+.ring-sub{font-size:.6rem;color:#9CA3AF;margin-top:2px}
+
+/* Module shortcuts */
+.shortcuts{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+.shortcut{background:#fff;border:1px solid #E5E7EB;border-radius:12px;padding:14px 10px;text-align:center;text-decoration:none;color:#111827;transition:all .15s;display:flex;flex-direction:column;align-items:center;gap:5px}
+.shortcut:active{transform:scale(.97);background:#F9FAFB}
+.shortcut-icon{font-size:1.4rem}
+.shortcut-label{font-size:.68rem;font-weight:600;color:#6B7280}
+
+/* Loading state */
+.loading-hub{text-align:center;padding:40px 20px;color:#9CA3AF;font-size:.84rem}
+</style>
+</head>
+<body>
+
+<nav class="sgs-nav">
+  <a class="sgs-nav-brand" href="/controle-financeiro/">
+    <div class="sgs-nav-logo">S&G</div>
+    <span class="sgs-nav-name">Suks &amp; Giu</span>
+  </a>
+  <div class="sgs-nav-links">
+    <a class="sgs-nav-link" href="/controle-financeiro/financeiro/">💰</a>
+    <a class="sgs-nav-link active" href="/controle-financeiro/hoje.html">⚡ Hoje</a>
+    <a class="sgs-nav-link" href="/controle-financeiro/metas/">🎯</a>
+    <a class="sgs-nav-link" href="/controle-financeiro/saude/">❤️</a>
+    <a class="sgs-nav-link" href="/controle-financeiro/habitos/">✅</a>
+    <a class="sgs-nav-link" href="/controle-financeiro/nutricao/">🥗</a>
+  </div>
+</nav>
+
+<div class="wrap">
+  <div class="hoje-date">
+    <div class="hoje-date-day" id="dateLabel"></div>
+    <div class="hoje-date-sub" id="dateSub"></div>
+  </div>
+  <div id="hubContent"><div class="loading-hub">⏳ Carregando seu dia...</div></div>
+</div>
+
+<script src="assets/supabase.js"></script>
+<script src="assets/goals-widget.js"></script>
+<script src="assets/mobile.js"></script>
+<script>
+(function(){
+'use strict';
+
+var PERSONS = [
+  {key:'gui', label:'Gui', color:'#1D4ED8', bg:'#EFF6FF'},
+  {key:'giu', label:'Giu', color:'#9333EA', bg:'#FDF4FF'}
+];
+
+function todayStr(){
+  var n=new Date();
+  return n.getFullYear()+'-'+pad(n.getMonth()+1)+'-'+pad(n.getDate());
+}
+function pad(n){return String(n).padStart(2,'0')}
+function uid(){return Date.now().toString(36)+Math.random().toString(36).slice(2,6)}
+function esc(s){return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;')}
+
+var TODAY = todayStr();
+var state = { workouts:[], goalLogs:[], goals:[], habits:[], habitLogs:[] };
+
+/* ── Date header ── */
+(function(){
+  var d = new Date();
+  var days=['Domingo','Segunda-feira','Terça-feira','Quarta-feira','Quinta-feira','Sexta-feira','Sábado'];
+  var months=['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez'];
+  document.getElementById('dateLabel').textContent = days[d.getDay()]+', '+d.getDate()+' de '+months[d.getMonth()];
+  document.getElementById('dateSub').textContent = d.getFullYear();
+})();
+
+/* ── Load all data ── */
+function loadAll(){
+  Promise.all([
+    db.from('workouts').eq('date',TODAY).select('*'),
+    db.from('goal_logs').eq('date',TODAY).select('*'),
+    db.from('goals').select('id,title,area,person,target_count,progress,deadline'),
+    db.from('habits').eq('active','true').select('id,title,icon,color,area,frequency,days_of_week'),
+    db.from('habit_logs').eq('date',TODAY).select('*')
+  ]).then(function(res){
+    state.workouts  = res[0]||[];
+    state.goalLogs  = res[1]||[];
+    state.goals     = res[2]||[];
+    state.habits    = res[3]||[];
+    state.habitLogs = res[4]||[];
+    render();
+  }).catch(function(e){
+    document.getElementById('hubContent').innerHTML =
+      '<div class="loading-hub">⚠️ '+esc(e.message)+'</div>';
+  });
+}
+
+/* ── Progress ring ── */
+function renderRing(){
+  var total=0, done=0;
+  // Workouts (each person counts as 1)
+  PERSONS.forEach(function(p){
+    total++;
+    if(state.workouts.some(function(w){return w.person===p.key;})) done++;
+  });
+  // Countable goals
+  var countGoals = state.goals.filter(function(g){return g.target_count>0;});
+  countGoals.forEach(function(g){
+    var trackers = g.person==='ambos' ? ['gui','giu'] : [g.person||'gui'];
+    trackers.forEach(function(pk){
+      total++;
+      if(state.goalLogs.some(function(l){return l.goal_id===g.id&&l.person===pk;})) done++;
+    });
+  });
+  // Habits due today
+  var dow = new Date().getDay();
+  var dueHabits = state.habits.filter(function(h){
+    if(h.frequency==='daily') return true;
+    if(h.frequency==='weekdays') return dow>=1&&dow<=5;
+    if(h.frequency==='weekend') return dow===0||dow===6;
+    if(h.frequency==='custom') return (h.days_of_week||[]).indexOf(dow)!==-1;
+    return true;
+  });
+  dueHabits.forEach(function(h){
+    total++;
+    if(state.habitLogs.some(function(l){return l.habit_id===h.id&&l.done;})) done++;
+  });
+
+  var pct = total>0?Math.round(done/total*100):0;
+  var color = pct>=100?'#15803D':pct>=60?'#1D4ED8':'#E5E7EB';
+  var r=42, circum=2*Math.PI*r, dash=circum*(1-pct/100);
+  return '<div class="today-ring">'+
+    '<div class="ring-wrap">'+
+      '<svg viewBox="0 0 100 100" width="100" height="100">'+
+        '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="#F3F4F6" stroke-width="10"/>'+
+        '<circle cx="50" cy="50" r="'+r+'" fill="none" stroke="'+color+'" stroke-width="10"'+
+          ' stroke-dasharray="'+circum.toFixed(1)+'" stroke-dashoffset="'+dash.toFixed(1)+'"'+
+          ' stroke-linecap="round" style="transition:stroke-dashoffset .6s ease"/>'+
+      '</svg>'+
+      '<div class="ring-center">'+
+        '<div class="ring-pct" style="color:'+color+'">'+pct+'%</div>'+
+        '<div class="ring-sub">'+done+'/'+total+'</div>'+
+      '</div>'+
+    '</div>'+
+  '</div>';
+}
+
+/* ── Render all ── */
+function render(){
+  var html = renderRing();
+
+  /* ── Treino ── */
+  html += '<div class="h-section">';
+  html += '<div class="h-section-title">💪 Treino do dia</div>';
+  PERSONS.forEach(function(p){
+    var wks = state.workouts.filter(function(w){return w.person===p.key;});
+    var hasTrained = wks.length>0;
+    html += '<div class="wk-card'+(hasTrained?' done':'')+'" id="wkCard-'+p.key+'" style="--p-color:'+p.color+';--p-bg:'+p.bg+';">';
+    html += '<div class="wk-person">'+p.label+
+      (hasTrained?'<span class="wk-done-badge">✓ '+wks.length+' treino'+(wks.length>1?'s':'')+'</span>':
+       '<span style="font-size:.7rem;color:#D1D5DB;font-weight:500;">Não registrado</span>')+
+    '</div>';
+    if(hasTrained){
+      html += '<div class="wk-list">';
+      wks.forEach(function(w){
+        html += '<div class="wk-item">'+
+          '<span class="wk-item-text">'+esc(w.notes||'Treino')+'</span>'+
+          '<button class="wk-undo" onclick="undoWorkout(\''+w.id+'\')" title="Desfazer">↩</button>'+
+        '</div>';
+      });
+      html += '</div>';
+    }
+    html += '<div class="wk-input-wrap" id="wkWrap-'+p.key+'">'+
+      '<input class="wk-input" id="wkIn-'+p.key+'" type="text" '+
+        'placeholder="O que você fez? Academia, Beach Tennis..." '+
+        'onkeydown="if(event.key===\'Enter\')saveWorkout(\''+p.key+'\')" />' +
+      '<button class="wk-confirm" onclick="saveWorkout(\''+p.key+'\')">✓ Confirmar</button>'+
+    '</div>';
+    html += '<button class="wk-add-btn" id="wkBtn-'+p.key+'" onclick="showWkForm(\''+p.key+'\')">'+
+      (hasTrained?'+ Adicionar outro':'+ '+p.label+' treinou hoje!')+
+    '</button>';
+    html += '</div>';
+  });
+  html += '</div>';
+
+  /* ── Metas com check-in ── */
+  var countGoals = state.goals.filter(function(g){return g.target_count>0;});
+  if(countGoals.length){
+    html += '<div class="h-section">';
+    html += '<div class="h-section-title">🎯 Metas — check-in</div>';
+    countGoals.forEach(function(g){
+      var trackers = g.person==='ambos'?['gui','giu']:[g.person||'gui'];
+      var allLogs = db ? [] : []; // logs already loaded in state
+      var AREA_COLORS={fin:'#15803D',sau:'#E11D48',apr:'#1D4ED8',rel:'#9333EA',pes:'#EA580C',pro:'#0891B2'};
+      var gColor = AREA_COLORS[g.area]||'#1D4ED8';
+      var PS={gui:{c:'#1D4ED8',bg:'#EFF6FF',l:'Gui'},giu:{c:'#9333EA',bg:'#FDF4FF',l:'Giu'}};
+
+      html += '<div class="goal-card-hoje" style="--g-color:'+gColor+';">';
+      html += '<div class="gcj-head"><div class="gcj-title">'+esc(g.title)+'</div></div>';
+      html += '<div class="gcj-bars">';
+
+      trackers.forEach(function(pk){
+        var ps = PS[pk]||PS.gui;
+        var totalLogs = state.goalLogs.filter(function(l){return l.goal_id===g.id&&l.person===pk;});
+        // Count all-time logs (not just today) — need separate load; use 0 for now, widget shows it
+        var dayDone = state.goalLogs.some(function(l){return l.goal_id===g.id&&l.person===pk;});
+
+        html += '<div class="gcj-bar-row">'+
+          '<span class="gcj-bar-label" style="color:'+ps.c+'">'+ps.l+'</span>'+
+          '<div class="gcj-bar-track"><div class="gcj-bar-fill" style="background:'+ps.c+';width:0%"></div></div>'+
+          '<span class="gcj-bar-count" style="color:'+ps.c+'">/'+g.target_count+' dias</span>'+
+        '</div>';
+
+        html += '<button class="gcj-check-btn '+(dayDone?'checked':'unchecked')+'" '+
+          'onclick="checkGoal(\''+g.id+'\',\''+pk+'\')" '+
+          'style="border-color:'+(dayDone?'#15803D':ps.c)+';background:'+(dayDone?'#F0FDF4':'#fff')+';color:'+(dayDone?'#15803D':ps.c)+'">'+
+          (dayDone?'✓ '+ps.l+' registrou hoje — toque para desfazer':'+ Registrar hoje ('+ps.l+')')+
+        '</button>';
+      });
+
+      html += '</div>';
+      html += '<a href="/controle-financeiro/metas/" style="font-size:.68rem;color:#9CA3AF;text-decoration:none;display:block;text-align:right;margin-top:6px">Ver em Metas →</a>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+
+  /* ── Hábitos do dia ── */
+  var dow = new Date().getDay();
+  var dueHabits = state.habits.filter(function(h){
+    if(h.frequency==='daily') return true;
+    if(h.frequency==='weekdays') return dow>=1&&dow<=5;
+    if(h.frequency==='weekend') return dow===0||dow===6;
+    if(h.frequency==='custom') return (h.days_of_week||[]).indexOf(dow)!==-1;
+    return true;
+  });
+  if(dueHabits.length){
+    html += '<div class="h-section">';
+    html += '<div class="h-section-title">✅ Hábitos</div>';
+    html += '<div style="background:#fff;border:1px solid #E5E7EB;border-radius:14px;overflow:hidden">';
+    dueHabits.forEach(function(h,i){
+      var isDone = state.habitLogs.some(function(l){return l.habit_id===h.id&&l.done;});
+      var border = i>0?'border-top:1px solid #F3F4F6;':'';
+      html += '<div style="display:flex;align-items:center;gap:12px;padding:13px 15px;'+border+'" onclick="toggleHabit(\''+h.id+'\')" style="cursor:pointer">'+
+        '<div style="width:24px;height:24px;border-radius:7px;border:2px solid '+(isDone?h.color:'#D1D5DB')+';background:'+(isDone?h.color:'#fff')+';display:flex;align-items:center;justify-content:center;color:#fff;font-size:.8rem;flex-shrink:0;cursor:pointer;">'+(isDone?'✓':'')+'</div>'+
+        '<span style="font-size:1rem">' +h.icon+'</span>'+
+        '<span style="font-size:.86rem;font-weight:'+(isDone?'500':'600')+';color:'+(isDone?'#9CA3AF':'#111827')+';text-decoration:'+(isDone?'line-through':'none')+';flex:1">'+esc(h.title)+'</span>'+
+        (isDone?'<span style="font-size:.65rem;color:#15803D;font-weight:700">✓</span>':'')+
+      '</div>';
+    });
+    html += '</div>';
+    html += '<a href="/controle-financeiro/habitos/" style="font-size:.68rem;color:#9CA3AF;text-decoration:none;display:block;text-align:right;margin-top:6px;padding:0 2px">Ver todos os hábitos →</a>';
+    html += '</div>';
+  }
+
+  /* ── Atalhos ── */
+  html += '<div class="h-section">';
+  html += '<div class="h-section-title">Módulos</div>';
+  html += '<div class="shortcuts">'+
+    shortcut('💰','Financeiro','/controle-financeiro/financeiro/')+
+    shortcut('🎯','Metas','/controle-financeiro/metas/')+
+    shortcut('🥗','Nutrição','/controle-financeiro/nutricao/')+
+    shortcut('❤️','Saúde','/controle-financeiro/saude/')+
+    shortcut('✅','Hábitos','/controle-financeiro/habitos/')+
+    shortcut('🏠','Início','/controle-financeiro/')+
+  '</div>';
+  html += '</div>';
+
+  document.getElementById('hubContent').innerHTML = html;
+}
+
+function shortcut(icon, label, href){
+  return '<a class="shortcut" href="'+href+'">'+
+    '<span class="shortcut-icon">'+icon+'</span>'+
+    '<span class="shortcut-label">'+label+'</span>'+
+  '</a>';
+}
+
+/* ── Actions ── */
+window.showWkForm = function(pk){
+  var wrap=document.getElementById('wkWrap-'+pk);
+  var btn=document.getElementById('wkBtn-'+pk);
+  if(wrap){wrap.classList.add('open');}
+  if(btn){btn.style.display='none';}
+  setTimeout(function(){var i=document.getElementById('wkIn-'+pk);if(i)i.focus();},50);
+};
+
+window.saveWorkout = function(pk){
+  var inp=document.getElementById('wkIn-'+pk);
+  var desc=(inp?inp.value:'').trim();
+  if(!desc){if(inp)inp.focus();return;}
+  var row={id:uid(),date:TODAY,type:'Treino',person:pk,duration_min:0,intensity:3,calories_burned:0,goal_id:null,notes:desc,created_at:new Date().toISOString()};
+  db.from('workouts').insert(row).then(function(res){
+    state.workouts.push(Array.isArray(res)?res[0]:row);
+    if(window.GoalsWidget) GoalsWidget.celebrate('sau');
+    render();
+  }).catch(function(e){alert('Erro: '+e.message);});
+};
+
+window.undoWorkout = function(id){
+  db.from('workouts').eq('id',id).delete().then(function(){
+    state.workouts=state.workouts.filter(function(w){return w.id!==id;});
+    render();
+  });
+};
+
+window.checkGoal = function(goalId, pk){
+  var existing=state.goalLogs.find(function(l){return l.goal_id===goalId&&l.person===pk&&l.date===TODAY;});
+  if(existing){
+    db.from('goal_logs').eq('id',existing.id).delete().then(function(){
+      state.goalLogs=state.goalLogs.filter(function(l){return l.id!==existing.id;});
+      render();
+    });
+  } else {
+    var row={id:uid(),goal_id:goalId,date:TODAY,person:pk};
+    db.from('goal_logs').insert(row).then(function(res){
+      state.goalLogs.push(Array.isArray(res)?res[0]:row);
+      if(window.GoalsWidget) GoalsWidget.celebrate('sau');
+      render();
+    }).catch(function(e){alert('Erro: '+e.message);});
+  }
+};
+
+window.toggleHabit = function(habitId){
+  var existing=state.habitLogs.find(function(l){return l.habit_id===habitId;});
+  var newDone=existing?!existing.done:true;
+  var op=existing
+    ? db.from('habit_logs').eq('id',existing.id).update({done:newDone})
+    : db.from('habit_logs').upsert({id:uid(),habit_id:habitId,date:TODAY,done:true});
+  op.then(function(){
+    if(existing){existing.done=newDone;}
+    else{state.habitLogs.push({id:uid(),habit_id:habitId,date:TODAY,done:true});}
+    render();
+  }).catch(function(e){alert('Erro: '+e.message);});
+};
+
+/* ── Start ── */
+loadAll();
+
+}());
+</script>
+<script>if('serviceWorker'in navigator)navigator.serviceWorker.register('/controle-financeiro/sw.js');</script>
+</body>
+</html>
